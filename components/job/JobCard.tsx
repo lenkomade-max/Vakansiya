@@ -10,7 +10,7 @@ export interface JobCardProps {
   salary?: string;
   postedAt: string;
   logo?: string;
-  category?: 'it' | 'marketing' | 'design' | 'sales' | 'management' | 'other';
+  category?: 'it' | 'marketing' | 'design' | 'sales' | 'management' | 'finance' | 'hr' | 'other';
   isRemote?: boolean;
   type?: 'full-time' | 'part-time' | 'contract' | 'freelance';
   isVIP?: boolean;
