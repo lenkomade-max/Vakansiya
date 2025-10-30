@@ -27,9 +27,14 @@ export const Navigation: React.FC<NavigationProps> = ({
             <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center">
               <span className="text-white font-bold text-xl">V</span>
             </div>
-            <span className="text-2xl font-bold text-black hidden sm:block">
-              VAKANSIYA.AZ
-            </span>
+            <div className="hidden sm:flex items-center gap-2">
+              <span className="text-2xl font-bold text-black">
+                VAKANSIYA.AZ
+              </span>
+              <span className="text-base font-medium text-gray-700">
+                Azərbaycanda iş tap
+              </span>
+            </div>
           </div>
 
           {/* Desktop Navigation */}

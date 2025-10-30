@@ -103,38 +103,10 @@ export default function HomePage() {
       />
 
       {/* Hero Section */}
-      <section className="bg-white py-8 md:py-16">
+      <section className="bg-white py-6 md:py-10">
         <div className="container mx-auto px-4 max-w-7xl">
-          {/* Заголовок */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl md:text-5xl font-bold text-black mb-3">
-              Azərbaycanda iş tap
-            </h1>
-            <p className="text-base md:text-xl text-gray-700">
-              Minglərlə aktiv vakansiya arasından sizə uyğun işi tapın
-            </p>
-          </div>
-
           {/* Поиск */}
           <SearchBar onSearch={handleSearch} />
-
-          {/* Статистика */}
-          <div className="grid grid-cols-3 gap-3 md:gap-6 mt-8 md:mt-12">
-            <div className="bg-white p-3 md:p-6 rounded-lg border border-gray-200 text-center">
-              <div className="text-xl md:text-3xl font-bold text-black mb-1">14,523</div>
-              <div className="text-[10px] md:text-sm text-gray-600">Vakansiya</div>
-            </div>
-
-            <div className="bg-white p-3 md:p-6 rounded-lg border border-gray-200 text-center">
-              <div className="text-xl md:text-3xl font-bold text-black mb-1">1,200+</div>
-              <div className="text-[10px] md:text-sm text-gray-600">Şirkət</div>
-            </div>
-
-            <div className="bg-white p-3 md:p-6 rounded-lg border border-gray-200 text-center">
-              <div className="text-xl md:text-3xl font-bold text-black mb-1">50,000+</div>
-              <div className="text-[10px] md:text-sm text-gray-600">İstifadəçi</div>
-            </div>
-          </div>
         </div>
       </section>
 
