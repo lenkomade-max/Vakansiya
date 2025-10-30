@@ -9,6 +9,7 @@ import { ShortJobCard, ShortJob } from '@/components/short-jobs/ShortJobCard'
 
 export default function HomePage() {
   const router = useRouter()
+  const [activeTab, setActiveTab] = useState<'vakansiyalar' | 'gundelik'>('vakansiyalar')
   const [jobs, setJobs] = useState<any[]>([])
   const [shortJobs, setShortJobs] = useState<ShortJob[]>([])
   const [page, setPage] = useState(1)
@@ -154,57 +155,85 @@ export default function HomePage() {
         <div className="container mx-auto px-4 max-w-7xl">
           {/* Поиск */}
           <SearchBar onSearch={handleSearch} />
-        </div>
-      </section>
 
-      {/* Vakansiyalar - СЕТКА 2x2 на мобилке */}
-      <section className="py-6 md:py-12 bg-gray-50">
-        <div className="container mx-auto px-4 max-w-7xl">
-          <div className="flex items-center justify-between mb-4 md:mb-6">
-            <h2 className="text-xl md:text-3xl font-bold text-black">Vakansiyalar</h2>
-            <span className="text-xs md:text-sm text-gray-600">{jobs.length} nəticə</span>
-          </div>
-
-          {/* СЕТКА: 2 колонки на мобилке, 3-4 на десктопе */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
-            {jobs.map((job) => (
-              <JobCard
-                key={job.id}
-                {...job}
-                onApply={() => handleApply(job.id)}
-              />
-            ))}
-          </div>
-
-          {/* Loading indicator + Observer target */}
-          <div ref={observerTarget} className="py-8 text-center">
-            {loading && (
-              <div className="inline-block">
-                <div className="w-8 h-8 border-4 border-gray-300 border-t-black rounded-full animate-spin"></div>
-              </div>
-            )}
+          {/* Табы для мобилки - переключение между Vakansiyalar и Gündəlik işlər */}
+          <div className="mt-4 md:hidden flex items-center gap-2 bg-gray-100 p-1 rounded-xl">
+            <button
+              onClick={() => setActiveTab('vakansiyalar')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all ${
+                activeTab === 'vakansiyalar'
+                  ? 'bg-black text-white shadow-sm'
+                  : 'text-gray-600 hover:text-black'
+              }`}
+            >
+              💼 Vakansiyalar
+            </button>
+            <button
+              onClick={() => setActiveTab('gundelik')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all ${
+                activeTab === 'gundelik'
+                  ? 'bg-black text-white shadow-sm'
+                  : 'text-gray-600 hover:text-black'
+              }`}
+            >
+              ⚡ Gündəlik
+            </button>
           </div>
         </div>
       </section>
 
-      {/* Gündəlik İşlər Section */}
-      <section className="py-6 md:py-12 bg-white">
-        <div className="container mx-auto px-4 max-w-7xl">
-          <div className="flex items-center justify-between mb-4 md:mb-6">
-            <h2 className="text-xl md:text-3xl font-bold text-black">Gündəlik İşlər</h2>
-            <a href="/gundelik-isler" className="text-sm md:text-base text-gray-600 hover:text-black transition-colors">
-              Hamısına bax →
-            </a>
-          </div>
+      {/* Vakansiyalar - показываем только если выбран таб vakansiyalar ИЛИ десктоп */}
+      {(activeTab === 'vakansiyalar' || window.innerWidth >= 768) && (
+        <section className="py-6 md:py-12 bg-gray-50">
+          <div className="container mx-auto px-4 max-w-7xl">
+            <div className="flex items-center justify-between mb-4 md:mb-6">
+              <h2 className="text-xl md:text-3xl font-bold text-black">Vakansiyalar</h2>
+              <span className="text-xs md:text-sm text-gray-600">{jobs.length} nəticə</span>
+            </div>
 
-          {/* СЕТКА: 2 колонки на мобилке, 3-4 на десктопе */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
-            {shortJobs.map((job) => (
-              <ShortJobCard key={job.id} {...job} />
-            ))}
+            {/* СЕТКА: 2 колонки на мобилке, 3-4 на десктопе */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
+              {jobs.map((job) => (
+                <JobCard
+                  key={job.id}
+                  {...job}
+                  onApply={() => handleApply(job.id)}
+                />
+              ))}
+            </div>
+
+            {/* Loading indicator + Observer target */}
+            <div ref={observerTarget} className="py-8 text-center">
+              {loading && (
+                <div className="inline-block">
+                  <div className="w-8 h-8 border-4 border-gray-300 border-t-black rounded-full animate-spin"></div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {/* Gündəlik İşlər - показываем только если выбран таб gundelik ИЛИ десктоп */}
+      {(activeTab === 'gundelik' || window.innerWidth >= 768) && (
+        <section className="py-6 md:py-12 bg-white">
+          <div className="container mx-auto px-4 max-w-7xl">
+            <div className="flex items-center justify-between mb-4 md:mb-6">
+              <h2 className="text-xl md:text-3xl font-bold text-black">Gündəlik İşlər</h2>
+              <a href="/gundelik-isler" className="text-sm md:text-base text-gray-600 hover:text-black transition-colors">
+                Hamısına bax →
+              </a>
+            </div>
+
+            {/* СЕТКА: 2 колонки на мобилке, 3-4 на десктопе */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
+              {shortJobs.map((job) => (
+                <ShortJobCard key={job.id} {...job} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA Section */}
       <section className="py-12 md:py-16 bg-black text-white">
