@@ -77,18 +77,16 @@ export const Navigation: React.FC<NavigationProps> = ({
               <>
                 <button
                   onClick={onLogin}
-                  className="px-3 md:px-4 py-2 bg-white text-black text-sm md:text-base font-medium border border-black rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-2.5 md:px-4 py-2 bg-white text-black text-xs md:text-base font-medium border border-black rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap"
                 >
                   Daxil ol
                 </button>
                 <button
-                  onClick={() => {
-                    // Если не авторизован - сначала логин, потом post-job
-                    onLogin && onLogin()
-                  }}
-                  className="px-3 md:px-6 py-2 bg-black text-white text-sm md:text-base font-semibold rounded-lg hover:bg-gray-800 transition-colors whitespace-nowrap"
+                  onClick={onPostJob}
+                  className="px-2.5 md:px-6 py-2 bg-black text-white text-xs md:text-base font-semibold rounded-lg hover:bg-gray-800 transition-colors whitespace-nowrap"
                 >
-                  Vakansiya yerləşdir
+                  <span className="hidden sm:inline">Vakansiya yerləşdir</span>
+                  <span className="sm:hidden">Elan yerləşdir</span>
                 </button>
               </>
             )}
