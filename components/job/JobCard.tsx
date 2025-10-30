@@ -1,5 +1,4 @@
 import React from 'react';
-import Button from '../ui/Button';
 
 export interface JobCardProps {
   id: string;
@@ -9,13 +8,12 @@ export interface JobCardProps {
   salary?: string;
   postedAt: string;
   logo?: string;
-  tags?: string[];
   category?: 'it' | 'marketing' | 'design' | 'sales' | 'management' | 'other';
   isRemote?: boolean;
   type?: 'full-time' | 'part-time' | 'contract' | 'freelance';
+  isVIP?: boolean;
+  isUrgent?: boolean;
   onApply?: () => void;
-  onSave?: () => void;
-  isSaved?: boolean;
 }
 
 export const JobCard: React.FC<JobCardProps> = ({
@@ -25,22 +23,21 @@ export const JobCard: React.FC<JobCardProps> = ({
   salary,
   postedAt,
   logo,
-  tags = [],
   category = 'other',
   isRemote = false,
   type = 'full-time',
+  isVIP = false,
+  isUrgent = false,
   onApply,
-  onSave,
-  isSaved = false,
 }) => {
-  // Цвета для категорий (светлые версии для фона логотипа)
+  // Цвета для категорий (фон логотипа)
   const categoryColors = {
-    it: 'bg-blue-100',
-    marketing: 'bg-red-100',
-    design: 'bg-purple-100',
-    sales: 'bg-green-100',
-    management: 'bg-orange-100',
-    other: 'bg-gray-100',
+    it: 'bg-blue-50',
+    marketing: 'bg-red-50',
+    design: 'bg-purple-50',
+    sales: 'bg-green-50',
+    management: 'bg-orange-50',
+    other: 'bg-gray-50',
   };
 
   // Перевод типов работы на азербайджанский
@@ -51,99 +48,93 @@ export const JobCard: React.FC<JobCardProps> = ({
     'freelance': 'Freelance',
   };
 
+  const workTypeLabels = {
+    office: '🏢 Ofis',
+    remote: '💼 Distant',
+    hybrid: '🤝 Hibrid',
+  };
+
   return (
-    <div className="card-base group">
-      {/* Header: Logo + Company + Save Button */}
-      <div className="flex items-start gap-4 mb-4">
-        {/* Логотип компании */}
-        <div className={`w-14 h-14 rounded-xl ${categoryColors[category]} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300`}>
+    <div
+      onClick={onApply}
+      className="bg-white rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 hover:shadow-lg transition-all duration-200 cursor-pointer group"
+    >
+      {/* Фото/Лого с badges НА нем */}
+      <div className="relative aspect-square bg-gray-100">
+        {/* Логотип */}
+        <div className={`w-full h-full ${categoryColors[category]} flex items-center justify-center`}>
           {logo ? (
             <img
               src={logo}
               alt={company}
-              className="w-10 h-10 object-contain"
+              className="w-20 h-20 object-contain"
             />
           ) : (
-            <span className="text-2xl font-bold text-gray-700">
+            <span className="text-5xl font-bold text-gray-400">
               {company.charAt(0)}
             </span>
           )}
         </div>
 
-        {/* Информация о вакансии */}
-        <div className="flex-1 min-w-0">
-          <h3 className="text-xl font-semibold text-black mb-1 group-hover:text-accent-primary transition-colors truncate">
-            {title}
-          </h3>
-          <p className="text-base text-gray-700 truncate">
-            {company}
-          </p>
+        {/* VIP Badge - ТОЛЬКО СВЕРХУ */}
+        {isVIP && (
+          <div className="absolute top-2 left-2">
+            <span className="px-2 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[10px] font-bold rounded shadow-md flex items-center gap-1">
+              🔥 VIP
+            </span>
+          </div>
+        )}
+
+        {/* Badges СНИЗУ фото - ВСЁ В ОДНОЙ ЛИНИИ */}
+        <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent">
+          <div className="flex items-center justify-between text-white text-[10px] gap-1">
+            {/* Левая часть: зарплата + срочность */}
+            <div className="flex items-center gap-1 min-w-0">
+              {salary && (
+                <span className="px-1.5 py-0.5 bg-white/90 text-black font-semibold rounded text-[9px] whitespace-nowrap">
+                  💰 {salary}
+                </span>
+              )}
+              {isUrgent && (
+                <span className="px-1.5 py-0.5 bg-red-500 text-white font-bold rounded text-[9px] whitespace-nowrap">
+                  🔴
+                </span>
+              )}
+            </div>
+
+            {/* Правая часть: тип работы */}
+            {isRemote && (
+              <span className="px-1.5 py-0.5 bg-blue-500 text-white font-medium rounded text-[9px] whitespace-nowrap">
+                💼 Distant
+              </span>
+            )}
+          </div>
         </div>
-
-        {/* Кнопка "Сохранить" */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onSave?.();
-          }}
-          className="w-10 h-10 rounded-full hover:bg-gray-100 transition-colors flex items-center justify-center flex-shrink-0"
-          aria-label={isSaved ? 'Yaddan çıxart' : 'Yadda saxla'}
-        >
-          <span className={`text-xl ${isSaved ? 'text-red-500' : 'text-gray-400'}`}>
-            {isSaved ? '❤️' : '🤍'}
-          </span>
-        </button>
       </div>
 
-      {/* Details: Location, Salary, Posted Time */}
-      <div className="flex items-center gap-4 text-sm text-gray-700 mb-4 flex-wrap">
-        <span className="flex items-center gap-1">
-          <span className="text-base">📍</span>
-          {location}
-        </span>
+      {/* Информация под фото */}
+      <div className="p-3">
+        {/* Название вакансии */}
+        <h3 className="text-[15px] font-semibold text-black mb-1 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">
+          {title}
+        </h3>
 
-        {salary && (
-          <span className="flex items-center gap-1">
-            <span className="text-base">💰</span>
-            {salary}
+        {/* Компания */}
+        <p className="text-[13px] text-gray-600 mb-2 truncate">
+          {company}
+        </p>
+
+        {/* Локация + Время В ОДНОЙ ЛИНИИ */}
+        <div className="flex items-center text-[11px] text-gray-500">
+          <span className="flex items-center gap-0.5">
+            📍 {location}
           </span>
-        )}
-
-        <span className="flex items-center gap-1">
-          <span className="text-base">🕒</span>
-          {postedAt}
-        </span>
+          <span className="mx-1.5">•</span>
+          <span className="flex items-center gap-0.5">
+            ⏰ {postedAt}
+          </span>
+        </div>
       </div>
-
-      {/* Tags */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {/* Тип работы */}
-        <span className="tag-type">
-          {typeLabels[type]}
-        </span>
-
-        {/* Remote badge */}
-        {isRemote && (
-          <span className="tag-location">
-            📡 Distant
-          </span>
-        )}
-
-        {/* Дополнительные теги */}
-        {tags.map((tag, index) => (
-          <span key={index} className="tag-category">
-            {tag}
-          </span>
-        ))}
-      </div>
-
-      {/* CTA Button */}
-      <button
-        onClick={onApply}
-        className="w-full py-3 bg-black text-white rounded-xl font-semibold hover:bg-gray-900 transition-all duration-200 group-hover:bg-accent-primary"
-      >
-        Ətraflı bax →
-      </button>
     </div>
   );
 };

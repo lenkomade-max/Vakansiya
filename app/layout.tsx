@@ -1,8 +1,12 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Poppins } from 'next/font/google'
 import '@/styles/globals.css'
 
-const inter = Inter({ subsets: ['latin', 'cyrillic'] })
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Vakansiya.az - Azərbaycanda iş tap',
@@ -24,7 +28,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="az">
-      <body className={inter.className}>{children}</body>
+      <body className={poppins.className}>{children}</body>
     </html>
   )
 }
