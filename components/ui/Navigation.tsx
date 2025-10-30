@@ -23,7 +23,7 @@ export const Navigation: React.FC<NavigationProps> = ({
       <div className="container-main py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-3">
+          <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center">
               <span className="text-white font-bold text-xl">V</span>
             </div>
@@ -35,7 +35,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                 Azərbaycanda iş tap
               </span>
             </div>
-          </div>
+          </a>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
@@ -45,7 +45,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             <a href="/companies" className="nav-link">
               Şirkətlər
             </a>
-            <a href="/short-jobs" className="nav-link">
+            <a href="/gundelik-isler" className="nav-link">
               Gündəlik işlər
             </a>
           </div>

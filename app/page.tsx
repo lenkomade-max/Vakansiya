@@ -1,12 +1,16 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import Navigation from '@/components/ui/Navigation'
 import SearchBar from '@/components/ui/SearchBar'
 import JobCard from '@/components/job/JobCard'
+import { ShortJobCard, ShortJob } from '@/components/short-jobs/ShortJobCard'
 
 export default function HomePage() {
+  const router = useRouter()
   const [jobs, setJobs] = useState<any[]>([])
+  const [shortJobs, setShortJobs] = useState<ShortJob[]>([])
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
   const observerTarget = useRef(null)
@@ -36,9 +40,47 @@ export default function HomePage() {
     })
   }
 
+  // Генерируем fake данные для коротких работ
+  const generateShortJobs = (startId: number, count: number): ShortJob[] => {
+    const categories: any[] = ['transport', 'construction', 'cleaning', 'garden', 'restaurant', 'events', 'warehouse', 'office', 'creative', 'services']
+    const titles: Record<string, string[]> = {
+      transport: ['Taksi sürücüsü', 'Kuryer', 'Yük daşıma'],
+      construction: ['Bənna', 'Dülgər', 'Elektrik', 'Santexnik'],
+      cleaning: ['Ofis təmizliyi', 'Mənzil təmizliyi'],
+      garden: ['Bağban', 'Ağac budama'],
+      restaurant: ['Ofisiant', 'Aşpaz köməkçisi'],
+      events: ['Promouşn işçisi', 'Anket aparıcı'],
+      warehouse: ['Anbar işçisi', 'Yükdaşıma'],
+      office: ['Sənəd daşıma', 'Ofis köməkçisi'],
+      creative: ['Fotoqraf', 'Video operator'],
+      services: ['Təmir ustası', 'Mebel yığılması']
+    }
+    const locations = ['Bakı, Nəsimi', 'Bakı, Nərimanov', 'Bakı, Yasamal']
+    const startDates = ['Bu gün', 'Sabah', '3 Noyabr']
+
+    return Array.from({ length: count }, (_, i) => {
+      const id = startId + i
+      const category = categories[id % categories.length]
+      const categoryTitles = titles[category] || ['İş']
+
+      return {
+        id: `short-job-${id}`,
+        title: categoryTitles[id % categoryTitles.length],
+        category,
+        location: locations[id % locations.length],
+        salary: `${50 + (id % 10) * 20} AZN/gün`,
+        startDate: startDates[id % startDates.length],
+        duration: id % 3 === 0 ? `${1 + (id % 3)} gün` : undefined,
+        isVIP: id % 8 === 0,
+        isUrgent: id % 12 === 0,
+      }
+    })
+  }
+
   // Загружаем initial jobs
   useEffect(() => {
     setJobs(generateJobs(0, 20))
+    setShortJobs(generateShortJobs(0, 8))
   }, [])
 
   // Infinite scroll с Intersection Observer
@@ -78,7 +120,12 @@ export default function HomePage() {
   }
 
   const handleSearch = (query: string, location: string, category: string) => {
-    console.log('Поиск:', { query, location, category })
+    // Переход на страницу вакансий с параметрами поиска
+    const params = new URLSearchParams()
+    if (query) params.set('q', query)
+    if (location) params.set('location', location)
+    if (category) params.set('category', category)
+    router.push(`/vakansiyalar?${params.toString()}`)
   }
 
   const handleLogin = () => {
@@ -86,11 +133,11 @@ export default function HomePage() {
   }
 
   const handlePostJob = () => {
-    console.log('Размещение вакансии')
+    router.push('/post-job')
   }
 
   const handleApply = (jobId: string) => {
-    console.log('Отклик:', jobId)
+    router.push(`/vakansiyalar/${jobId}`)
   }
 
   return (
@@ -140,6 +187,25 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Gündəlik İşlər Section */}
+      <section className="py-6 md:py-12 bg-white">
+        <div className="container mx-auto px-4 max-w-7xl">
+          <div className="flex items-center justify-between mb-4 md:mb-6">
+            <h2 className="text-xl md:text-3xl font-bold text-black">Gündəlik İşlər</h2>
+            <a href="/gundelik-isler" className="text-sm md:text-base text-gray-600 hover:text-black transition-colors">
+              Hamısına bax →
+            </a>
+          </div>
+
+          {/* СЕТКА: 2 колонки на мобилке, 3-4 на десктопе */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
+            {shortJobs.map((job) => (
+              <ShortJobCard key={job.id} {...job} />
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-12 md:py-16 bg-black text-white">
         <div className="container mx-auto px-4 max-w-7xl text-center">
@@ -177,7 +243,8 @@ export default function HomePage() {
             <div>
               <h3 className="font-semibold text-black mb-3 text-sm md:text-base">İşaxtaranlar</h3>
               <ul className="space-y-2 text-xs md:text-sm text-gray-600">
-                <li><a href="/jobs">Vakansiyalar</a></li>
+                <li><a href="/vakansiyalar">Vakansiyalar</a></li>
+                <li><a href="/gundelik-isler">Gündəlik işlər</a></li>
                 <li><a href="/companies">Şirkətlər</a></li>
               </ul>
             </div>

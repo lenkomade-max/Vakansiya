@@ -62,7 +62,7 @@ Tələblər:
   }
 
   const handlePostJob = () => {
-    console.log('Разместить работу')
+    router.push('/post-job')
   }
 
   const handleContactClick = () => {
@@ -228,7 +228,7 @@ Tələblər:
             <div>
               <h3 className="font-semibold text-black mb-3 text-sm md:text-base">İşaxtaranlar</h3>
               <ul className="space-y-2 text-xs md:text-sm text-gray-600">
-                <li><a href="/">Vakansiyalar</a></li>
+                <li><a href="/vakansiyalar">Vakansiyalar</a></li>
                 <li><a href="/gundelik-isler">Gündəlik işlər</a></li>
                 <li><a href="/companies">Şirkətlər</a></li>
               </ul>

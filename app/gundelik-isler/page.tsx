@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import Navigation from '@/components/ui/Navigation'
 import { ShortJobCard, ShortJob } from '@/components/short-jobs/ShortJobCard'
 import { CategoryGrid, ShortJobCategory } from '@/components/short-jobs/CategoryIcons'
@@ -8,6 +9,7 @@ import FilterModal, { FilterOptions } from '@/components/ui/FilterModal'
 import { FunnelIcon } from '@heroicons/react/24/outline'
 
 export default function GundelikIslerPage() {
+  const router = useRouter()
   const [jobs, setJobs] = useState<ShortJob[]>([])
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -106,7 +108,7 @@ export default function GundelikIslerPage() {
   }
 
   const handlePostJob = () => {
-    console.log('Разместить короткую работу')
+    router.push('/post-job')
   }
 
   const handleCategoryClick = (category: ShortJobCategory) => {
@@ -278,7 +280,7 @@ export default function GundelikIslerPage() {
             <div>
               <h3 className="font-semibold text-black mb-3 text-sm md:text-base">İşaxtaranlar</h3>
               <ul className="space-y-2 text-xs md:text-sm text-gray-600">
-                <li><a href="/">Vakansiyalar</a></li>
+                <li><a href="/vakansiyalar">Vakansiyalar</a></li>
                 <li><a href="/gundelik-isler">Gündəlik işlər</a></li>
                 <li><a href="/companies">Şirkətlər</a></li>
               </ul>
