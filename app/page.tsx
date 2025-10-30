@@ -6,6 +6,7 @@ import Navigation from '@/components/ui/Navigation'
 import SearchBar from '@/components/ui/SearchBar'
 import JobCard from '@/components/job/JobCard'
 import { ShortJobCard, ShortJob } from '@/components/short-jobs/ShortJobCard'
+import { BriefcaseIcon, ClockIcon } from '@heroicons/react/24/outline'
 
 export default function HomePage() {
   const router = useRouter()
@@ -156,34 +157,36 @@ export default function HomePage() {
           {/* Поиск */}
           <SearchBar onSearch={handleSearch} />
 
-          {/* Табы для мобилки - переключение между Vakansiyalar и Gündəlik işlər */}
-          <div className="mt-4 md:hidden flex items-center gap-2 bg-gray-100 p-1 rounded-xl">
+          {/* Табы - переключение между Vakansiyalar и Gündəlik işlər */}
+          <div className="mt-4 flex items-center gap-2 bg-gray-100 p-1 rounded-xl max-w-md mx-auto">
             <button
               onClick={() => setActiveTab('vakansiyalar')}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all ${
                 activeTab === 'vakansiyalar'
-                  ? 'bg-black text-white shadow-sm'
+                  ? 'bg-white text-black shadow-sm'
                   : 'text-gray-600 hover:text-black'
               }`}
             >
-              💼 Vakansiyalar
+              <BriefcaseIcon className="w-5 h-5" />
+              Vakansiyalar
             </button>
             <button
               onClick={() => setActiveTab('gundelik')}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all ${
                 activeTab === 'gundelik'
-                  ? 'bg-black text-white shadow-sm'
+                  ? 'bg-white text-black shadow-sm'
                   : 'text-gray-600 hover:text-black'
               }`}
             >
-              ⚡ Gündəlik
+              <ClockIcon className="w-5 h-5" />
+              Gündəlik İş
             </button>
           </div>
         </div>
       </section>
 
-      {/* Vakansiyalar - показываем только если выбран таб vakansiyalar ИЛИ десктоп */}
-      <section className={`py-6 md:py-12 bg-gray-50 ${activeTab !== 'vakansiyalar' ? 'hidden md:block' : ''}`}>
+      {/* Vakansiyalar - показываем только если выбран таб vakansiyalar */}
+      <section className={`py-6 md:py-12 bg-gray-50 ${activeTab !== 'vakansiyalar' ? 'hidden' : ''}`}>
           <div className="container mx-auto px-4 max-w-7xl">
             <div className="flex items-center justify-between mb-4 md:mb-6">
               <h2 className="text-xl md:text-3xl font-bold text-black">Vakansiyalar</h2>
@@ -212,8 +215,8 @@ export default function HomePage() {
           </div>
         </section>
 
-      {/* Gündəlik İşlər - показываем только если выбран таб gundelik ИЛИ десктоп */}
-      <section className={`py-6 md:py-12 bg-white ${activeTab !== 'gundelik' ? 'hidden md:block' : ''}`}>
+      {/* Gündəlik İşlər - показываем только если выбран таб gundelik */}
+      <section className={`py-6 md:py-12 bg-white ${activeTab !== 'gundelik' ? 'hidden' : ''}`}>
           <div className="container mx-auto px-4 max-w-7xl">
             <div className="flex items-center justify-between mb-4 md:mb-6">
               <h2 className="text-xl md:text-3xl font-bold text-black">Gündəlik İşlər</h2>

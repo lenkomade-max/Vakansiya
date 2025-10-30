@@ -36,19 +36,6 @@ export const Navigation: React.FC<NavigationProps> = ({
             </div>
           </a>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            <a href="/" className="nav-link-active">
-              Vakansiyalar
-            </a>
-            <a href="/companies" className="nav-link">
-              Şirkətlər
-            </a>
-            <a href="/gundelik-isler" className="nav-link">
-              Gündəlik işlər
-            </a>
-          </div>
-
           {/* Actions - показываем на всех устройствах */}
           <div className="flex items-center gap-2 md:gap-4">
             {isAuthenticated ? (
@@ -90,7 +77,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               <>
                 <button
                   onClick={onLogin}
-                  className="px-3 md:px-4 py-2 text-black text-sm md:text-base font-medium hover:bg-gray-100 rounded-lg transition-colors"
+                  className="px-3 md:px-4 py-2 bg-white text-black text-sm md:text-base font-medium border border-black rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Daxil ol
                 </button>
@@ -101,8 +88,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                   }}
                   className="px-3 md:px-6 py-2 bg-black text-white text-sm md:text-base font-semibold rounded-lg hover:bg-gray-800 transition-colors whitespace-nowrap"
                 >
-                  <span className="hidden md:inline">Elan yerləşdir</span>
-                  <span className="md:hidden">Elan</span>
+                  Vakansiya yerləşdir
                 </button>
               </>
             )}
