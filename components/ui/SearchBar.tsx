@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { MagnifyingGlassIcon, MapPinIcon } from '@heroicons/react/24/outline';
 
 export interface SearchBarProps {
   onSearch: (query: string, location: string, category: string) => void;
@@ -35,9 +36,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             placeholder={placeholder}
             className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-gray-400 transition-colors pr-10"
           />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
-            🔍
-          </div>
+          <MagnifyingGlassIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
         </div>
 
         {/* Локация */}
@@ -57,9 +56,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             <option value="nakhchivan">Naxçıvan</option>
             <option value="remote">Distant</option>
           </select>
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-sm">
-            📍
-          </div>
+          <MapPinIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
         </div>
 
         {/* Кнопка поиска */}

@@ -1,4 +1,6 @@
 import React from 'react';
+import { MapPinIcon, ClockIcon, BanknotesIcon, BriefcaseIcon } from '@heroicons/react/24/outline';
+import { FireIcon } from '@heroicons/react/24/solid';
 
 export interface JobCardProps {
   id: string;
@@ -81,14 +83,16 @@ export const JobCard: React.FC<JobCardProps> = ({
           {/* VIP Badge */}
           {isVIP && (
             <span className="px-2 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[10px] font-bold rounded shadow-md flex items-center gap-1">
-              🔥 VIP
+              <FireIcon className="w-3 h-3" />
+              VIP
             </span>
           )}
 
           {/* Urgent Badge */}
           {isUrgent && (
-            <span className="px-2 py-1 bg-red-500 text-white font-bold rounded shadow-md text-[10px] whitespace-nowrap">
-              🔴 TƏCİLİ
+            <span className="px-2 py-1 bg-red-500 text-white font-bold rounded shadow-md text-[10px] whitespace-nowrap flex items-center gap-1">
+              <span className="w-2 h-2 bg-white rounded-full"></span>
+              TƏCİLİ
             </span>
           )}
         </div>
@@ -97,8 +101,9 @@ export const JobCard: React.FC<JobCardProps> = ({
         {salary && (
           <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent">
             <div className="flex items-center">
-              <span className="px-1.5 py-0.5 bg-white/90 text-black font-semibold rounded text-[9px] whitespace-nowrap">
-                💰 {salary}
+              <span className="px-1.5 py-0.5 bg-white/90 text-black font-semibold rounded text-[9px] whitespace-nowrap flex items-center gap-1">
+                <BanknotesIcon className="w-3 h-3" />
+                {salary}
               </span>
             </div>
           </div>
@@ -118,8 +123,9 @@ export const JobCard: React.FC<JobCardProps> = ({
             {company}
           </p>
           {isRemote && (
-            <span className="text-[11px] text-blue-600 font-medium flex-shrink-0 whitespace-nowrap">
-              💼 Distant
+            <span className="text-[11px] text-blue-600 font-medium flex-shrink-0 whitespace-nowrap flex items-center gap-1">
+              <BriefcaseIcon className="w-3 h-3" />
+              Distant
             </span>
           )}
         </div>
@@ -127,11 +133,13 @@ export const JobCard: React.FC<JobCardProps> = ({
         {/* Локация + Время В ОДНОЙ ЛИНИИ */}
         <div className="flex items-center text-[11px] text-gray-500">
           <span className="flex items-center gap-0.5">
-            📍 {location}
+            <MapPinIcon className="w-3 h-3" />
+            {location}
           </span>
           <span className="mx-1.5">•</span>
           <span className="flex items-center gap-0.5">
-            ⏰ {postedAt}
+            <ClockIcon className="w-3 h-3" />
+            {postedAt}
           </span>
         </div>
       </div>
