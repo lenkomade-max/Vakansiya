@@ -39,6 +39,8 @@ export const JobCard: React.FC<JobCardProps> = ({
     design: 'bg-purple-50',
     sales: 'bg-green-50',
     management: 'bg-orange-50',
+    finance: 'bg-yellow-50',
+    hr: 'bg-pink-50',
     other: 'bg-gray-50',
   };
 
