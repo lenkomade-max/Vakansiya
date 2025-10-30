@@ -183,8 +183,7 @@ export default function HomePage() {
       </section>
 
       {/* Vakansiyalar - показываем только если выбран таб vakansiyalar ИЛИ десктоп */}
-      {(activeTab === 'vakansiyalar' || window.innerWidth >= 768) && (
-        <section className="py-6 md:py-12 bg-gray-50">
+      <section className={`py-6 md:py-12 bg-gray-50 ${activeTab !== 'vakansiyalar' ? 'hidden md:block' : ''}`}>
           <div className="container mx-auto px-4 max-w-7xl">
             <div className="flex items-center justify-between mb-4 md:mb-6">
               <h2 className="text-xl md:text-3xl font-bold text-black">Vakansiyalar</h2>
@@ -212,11 +211,9 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-      )}
 
       {/* Gündəlik İşlər - показываем только если выбран таб gundelik ИЛИ десктоп */}
-      {(activeTab === 'gundelik' || window.innerWidth >= 768) && (
-        <section className="py-6 md:py-12 bg-white">
+      <section className={`py-6 md:py-12 bg-white ${activeTab !== 'gundelik' ? 'hidden md:block' : ''}`}>
           <div className="container mx-auto px-4 max-w-7xl">
             <div className="flex items-center justify-between mb-4 md:mb-6">
               <h2 className="text-xl md:text-3xl font-bold text-black">Gündəlik İşlər</h2>
@@ -233,7 +230,6 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-      )}
 
       {/* CTA Section */}
       <section className="py-12 md:py-16 bg-black text-white">
