@@ -57,10 +57,10 @@ export const JobCard: React.FC<JobCardProps> = ({
   return (
     <div
       onClick={onApply}
-      className="bg-white rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 hover:shadow-lg transition-all duration-200 cursor-pointer group"
+      className="bg-white rounded-xl overflow-hidden border border-gray-200 hover:border-gray-400 hover:shadow-lg transition-all duration-200 cursor-pointer group"
     >
       {/* Фото/Лого с badges НА нем */}
-      <div className="relative aspect-square bg-gray-100">
+      <div className="relative aspect-square bg-gray-100 rounded-t-xl overflow-hidden">
         {/* Логотип */}
         <div className={`w-full h-full ${categoryColors[category]} flex items-center justify-center`}>
           {logo ? (
