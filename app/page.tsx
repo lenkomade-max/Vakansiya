@@ -7,7 +7,7 @@ import SearchBar from '@/components/ui/SearchBar'
 import JobCard from '@/components/job/JobCard'
 import { ShortJobCard, ShortJob } from '@/components/short-jobs/ShortJobCard'
 import { BriefcaseIcon, ClockIcon } from '@heroicons/react/24/outline'
-import { signInWithGoogle } from '@/lib/auth'
+import { signInWithGoogle, getCurrentUser } from '@/lib/auth'
 
 export default function HomePage() {
   const router = useRouter()
@@ -16,6 +16,7 @@ export default function HomePage() {
   const [shortJobs, setShortJobs] = useState<ShortJob[]>([])
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const observerTarget = useRef(null)
 
   // Генерируем fake данные для демо
@@ -86,6 +87,15 @@ export default function HomePage() {
     setShortJobs(generateShortJobs(0, 8))
   }, [])
 
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      const user = await getCurrentUser()
+      setIsAuthenticated(!!user)
+    }
+    checkAuth()
+  }, [])
+
   // Infinite scroll с Intersection Observer
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -149,7 +159,7 @@ export default function HomePage() {
       <Navigation
         onLogin={handleLogin}
         onPostJob={handlePostJob}
-        isAuthenticated={false}
+        isAuthenticated={isAuthenticated}
       />
 
       {/* Hero Section */}

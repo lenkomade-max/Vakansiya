@@ -40,32 +40,13 @@ export const Navigation: React.FC<NavigationProps> = ({
           <div className="flex items-center gap-2 md:gap-4">
             {isAuthenticated ? (
               <>
-                {/* User Menu - только на десктопе */}
-                <div className="hidden md:flex items-center gap-3">
-                  {/* Notifications */}
-                  <button className="relative w-10 h-10 rounded-full hover:bg-gray-100 transition-colors flex items-center justify-center">
-                    <span className="text-xl">🔔</span>
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                  </button>
-
-                  {/* Avatar */}
-                  <button className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
-                    {userAvatar ? (
-                      <img
-                        src={userAvatar}
-                        alt={userName}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-                        <span className="text-sm font-bold text-gray-700">
-                          {userName?.charAt(0) || 'U'}
-                        </span>
-                      </div>
-                    )}
-                    <span className="text-sm font-medium text-black">{userName}</span>
-                  </button>
-                </div>
+                {/* Profile Button */}
+                <a
+                  href="/profile"
+                  className="px-2.5 md:px-4 py-2 bg-white text-black text-xs md:text-base font-medium border border-black rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap"
+                >
+                  Profil
+                </a>
 
                 {/* Post Job Button */}
                 <Button variant="primary" size="sm" onClick={onPostJob}>
