@@ -3,8 +3,10 @@
  * Работает локально, без API вызовов
  */
 
-import eld from 'eld';
+import * as eldModule from 'eld';
 import comparison from 'string-comparison';
+
+const eld = (eldModule as any).default || eldModule;
 import {
   spamKeywordsAZ,
   spamKeywordsRU,
