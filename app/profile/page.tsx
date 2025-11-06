@@ -9,9 +9,11 @@ import { UserIcon, EnvelopeIcon, PhoneIcon, BriefcaseIcon } from '@heroicons/rea
 export default function ProfilePage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
+  const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(true)
-  const [isEditing, setIsEditing] = useState(false)
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [isEditingPhone, setIsEditingPhone] = useState(false)
 
   useEffect(() => {
     const loadUser = async () => {
@@ -21,6 +23,7 @@ export default function ProfilePage() {
         return
       }
       setUser(currentUser)
+      setFullName(currentUser.user_metadata?.full_name || '')
       setLoading(false)
     }
     loadUser()
@@ -30,10 +33,49 @@ export default function ProfilePage() {
     await signOut()
   }
 
+  const handleSaveName = () => {
+    // TODO: Save name to database
+    setIsEditingName(false)
+    alert('Ad yadda saxlanıldı')
+  }
+
   const handleSavePhone = () => {
+    // Validate phone format: should be 9 digits (XX XXX XX XX)
+    const digitsOnly = phone.replace(/\s/g, '')
+    if (digitsOnly.length !== 9) {
+      alert('Zəhmət olmasa düzgün format daxil edin: XX XXX XX XX')
+      return
+    }
     // TODO: Save phone to database
-    setIsEditing(false)
+    setIsEditingPhone(false)
     alert('Telefon nömrəsi yadda saxlanıldı')
+  }
+
+  const formatPhoneInput = (value: string) => {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, '')
+    // Limit to 9 digits
+    const limited = digits.slice(0, 9)
+    // Format: XX XXX XX XX
+    let formatted = ''
+    if (limited.length > 0) {
+      formatted = limited.slice(0, 2)
+      if (limited.length > 2) {
+        formatted += ' ' + limited.slice(2, 5)
+      }
+      if (limited.length > 5) {
+        formatted += ' ' + limited.slice(5, 7)
+      }
+      if (limited.length > 7) {
+        formatted += ' ' + limited.slice(7, 9)
+      }
+    }
+    return formatted
+  }
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneInput(e.target.value)
+    setPhone(formatted)
   }
 
   if (loading) {
@@ -77,9 +119,48 @@ export default function ProfilePage() {
 
               {/* User Info */}
               <div className="flex-1">
-                <h1 className="text-3xl font-bold text-black mb-2">
-                  {user.user_metadata?.full_name || 'İstifadəçi'}
-                </h1>
+                {isEditingName ? (
+                  <div className="mb-4">
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="text-3xl font-bold text-black border-b-2 border-blue-500 focus:outline-none bg-transparent w-full"
+                      placeholder="Ad Soyad"
+                    />
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={handleSaveName}
+                        className="px-4 py-1.5 bg-black text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                      >
+                        Yadda saxla
+                      </button>
+                      <button
+                        onClick={() => {
+                          setFullName(user.user_metadata?.full_name || '')
+                          setIsEditingName(false)
+                        }}
+                        className="px-4 py-1.5 bg-white text-black text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        Ləğv et
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mb-2">
+                    <div className="flex items-center gap-3">
+                      <h1 className="text-3xl font-bold text-black">
+                        {fullName || 'İstifadəçi'}
+                      </h1>
+                      <button
+                        onClick={() => setIsEditingName(true)}
+                        className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                      >
+                        Redaktə et
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2 text-gray-600">
                     <EnvelopeIcon className="w-5 h-5" />
@@ -88,7 +169,7 @@ export default function ProfilePage() {
                   {phone && (
                     <div className="flex items-center gap-2 text-gray-600">
                       <PhoneIcon className="w-5 h-5" />
-                      <span>{phone}</span>
+                      <span>+994 {phone}</span>
                     </div>
                   )}
                 </div>
@@ -113,38 +194,48 @@ export default function ProfilePage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Telefon nömrəsi
                 </label>
-                {isEditing ? (
-                  <div className="flex gap-3">
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+994 XX XXX XX XX"
-                      className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <button
-                      onClick={handleSavePhone}
-                      className="px-6 py-2.5 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
-                    >
-                      Yadda saxla
-                    </button>
-                    <button
-                      onClick={() => setIsEditing(false)}
-                      className="px-6 py-2.5 bg-white text-black font-medium border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      Ləğv et
-                    </button>
+                {isEditingPhone ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-medium text-gray-700 bg-gray-100 px-4 py-2.5 rounded-lg border border-gray-300">
+                        +994
+                      </span>
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={handlePhoneChange}
+                        placeholder="XX XXX XX XX"
+                        className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      Format: 70 123 45 67 (50, 51, 55, 70, 77, 10, 99)
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleSavePhone}
+                        className="px-6 py-2.5 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                      >
+                        Yadda saxla
+                      </button>
+                      <button
+                        onClick={() => setIsEditingPhone(false)}
+                        className="px-6 py-2.5 bg-white text-black font-medium border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        Ləğv et
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">
-                      {phone || 'Telefon nömrəsi əlavə edilməyib'}
+                      {phone ? `+994 ${phone}` : 'Telefon nömrəsi əlavə edilməyib'}
                     </span>
                     <button
-                      onClick={() => setIsEditing(true)}
+                      onClick={() => setIsEditingPhone(true)}
                       className="px-4 py-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
                     >
-                      Redaktə et
+                      {phone ? 'Redaktə et' : 'Əlavə et'}
                     </button>
                   </div>
                 )}
