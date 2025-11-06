@@ -60,6 +60,9 @@ export async function createJob(
 ): Promise<{ success: boolean; jobId?: string; error?: string; status?: string }> {
   const supabase = createClient()
 
+  console.log('[createJob] Starting job creation for user:', userId)
+  console.log('[createJob] Job data:', jobData)
+
   // Prepare job post for moderation
   const jobPost = {
     title: jobData.title,
@@ -69,8 +72,12 @@ export async function createJob(
     location: jobData.location,
   }
 
+  console.log('[createJob] Running moderation...')
+
   // Run rules-based check first
   const moderationResult = await moderateContent(jobPost)
+
+  console.log('[createJob] Moderation result:', moderationResult)
 
   let finalStatus: 'pending_review' | 'active' | 'rejected' = 'pending_review'
 
@@ -108,6 +115,8 @@ export async function createJob(
   }
 
   // Insert job with determined status
+  console.log('[createJob] Inserting job with status:', finalStatus)
+
   const { data, error } = await supabase
     .from('jobs')
     .insert({
@@ -119,10 +128,11 @@ export async function createJob(
     .single()
 
   if (error) {
-    console.error('Error creating job:', error)
+    console.error('[createJob] Database error:', error)
     return { success: false, error: error.message }
   }
 
+  console.log('[createJob] Job created successfully:', data.id)
   return { success: true, jobId: data.id, status: finalStatus }
 }
 
