@@ -348,7 +348,7 @@ export default function ProfilePage() {
                           className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           onClick={() => {
                             if (confirm('Elanı silmək istədiyinizə əminsiniz?')) {
-                              toast.info('Funksiya tezliklə əlavə ediləcək')
+                              toast('Funksiya tezliklə əlavə ediləcək')
                             }
                           }}
                         >
