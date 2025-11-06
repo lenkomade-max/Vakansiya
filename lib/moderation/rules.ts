@@ -3,8 +3,8 @@
  * Работает локально, без API вызовов
  */
 
-import { detect } from 'eld';
-import { diceCoefficient } from 'string-comparison';
+import eld from 'eld';
+import comparison from 'string-comparison';
 import {
   spamKeywordsAZ,
   spamKeywordsRU,
@@ -102,7 +102,7 @@ function stage1_basicValidation(jobPost: JobPost): ModerationFlag[] {
   let language = null;
   if (jobPost.description && jobPost.description.length > 20) {
     try {
-      language = detect(jobPost.description).language;
+      language = eld.detect(jobPost.description).language;
       if (!['az', 'ru'].includes(language)) {
         flags.push({
           type: 'UNSUPPORTED_LANGUAGE',
@@ -282,7 +282,8 @@ export async function stage5_duplicateCheck(
     const existingText = `${existingPost.title} ${existingPost.description}`.toLowerCase();
 
     // Используем Dice Coefficient для сравнения
-    const similarity = diceCoefficient.similarity(currentText, existingText);
+    const dice = new comparison.diceCoefficient();
+    const similarity = dice.similarity(currentText, existingText);
 
     if (similarity > 0.85) {
       flags.push({
@@ -316,7 +317,7 @@ export async function moderateContent(
   // Определяем язык
   let language: string | null = null;
   try {
-    language = detect(jobPost.description).language;
+    language = eld.detect(jobPost.description).language;
   } catch (e) {
     console.warn('Language detection failed');
   }
