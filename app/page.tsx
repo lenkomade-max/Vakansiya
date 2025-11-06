@@ -7,6 +7,7 @@ import SearchBar from '@/components/ui/SearchBar'
 import JobCard from '@/components/job/JobCard'
 import { ShortJobCard, ShortJob } from '@/components/short-jobs/ShortJobCard'
 import { BriefcaseIcon, ClockIcon } from '@heroicons/react/24/outline'
+import { signInWithGoogle } from '@/lib/auth'
 
 export default function HomePage() {
   const router = useRouter()
@@ -131,7 +132,7 @@ export default function HomePage() {
   }
 
   const handleLogin = () => {
-    console.log('Вход')
+    signInWithGoogle()
   }
 
   const handlePostJob = () => {
