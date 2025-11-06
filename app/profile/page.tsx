@@ -6,7 +6,8 @@ import toast from 'react-hot-toast'
 import Navigation from '@/components/ui/Navigation'
 import { getCurrentUser, signOut } from '@/lib/auth'
 import { getProfile, updateProfile } from '@/lib/api/profile'
-import { UserIcon, EnvelopeIcon, PhoneIcon, BriefcaseIcon } from '@heroicons/react/24/outline'
+import { getUserJobs, Job } from '@/lib/api/jobs'
+import { UserIcon, EnvelopeIcon, PhoneIcon, BriefcaseIcon, TrashIcon } from '@heroicons/react/24/outline'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -16,6 +17,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [isEditingName, setIsEditingName] = useState(false)
   const [isEditingPhone, setIsEditingPhone] = useState(false)
+  const [userJobs, setUserJobs] = useState<Job[]>([])
 
   useEffect(() => {
     const loadUser = async () => {
@@ -34,6 +36,10 @@ export default function ProfilePage() {
       } else {
         setFullName(currentUser.user_metadata?.full_name || '')
       }
+
+      // Load user jobs
+      const jobs = await getUserJobs(currentUser.id)
+      setUserJobs(jobs)
 
       setLoading(false)
     }
@@ -281,32 +287,79 @@ export default function ProfilePage() {
               </button>
             </div>
 
-            {/* Empty State */}
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <BriefcaseIcon className="w-8 h-8 text-gray-400" />
+            {userJobs.length === 0 ? (
+              /* Empty State */
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <BriefcaseIcon className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-black mb-2">
+                  Hələ elanınız yoxdur
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  İlk vakansiya və ya gündəlik iş elanınızı yerləşdirin
+                </p>
+                <button
+                  onClick={() => router.push('/post-job')}
+                  className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Elan yerləşdir
+                </button>
               </div>
-              <h3 className="text-lg font-semibold text-black mb-2">
-                Hələ elanınız yoxdur
-              </h3>
-              <p className="text-gray-600 mb-6">
-                İlk vakansiya və ya gündəlik iş elanınızı yerləşdirin
-              </p>
-              <button
-                onClick={() => router.push('/post-job')}
-                className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Elan yerləşdir
-              </button>
-            </div>
-
-            {/* TODO: Replace with actual user jobs
-            <div className="space-y-4">
-              {userJobs.map(job => (
-                <JobCard key={job.id} {...job} />
-              ))}
-            </div>
-            */}
+            ) : (
+              /* Jobs List */
+              <div className="space-y-4">
+                {userJobs.map(job => (
+                  <div key={job.id} className="border border-gray-200 rounded-xl p-4 hover:border-gray-300 transition-colors">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-lg font-semibold text-black">{job.title}</h3>
+                          <span className={`px-2 py-1 text-xs font-medium rounded ${
+                            job.job_type === 'vakansiya'
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-green-100 text-green-700'
+                          }`}>
+                            {job.job_type === 'vakansiya' ? 'Vakansiya' : 'Gündəlik'}
+                          </span>
+                          {job.status !== 'active' && (
+                            <span className="px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-600">
+                              {job.status}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-3 text-sm text-gray-600">
+                          {job.company && <span>{job.company}</span>}
+                          <span>{job.location}</span>
+                          {job.salary && <span className="font-medium text-black">{job.salary}</span>}
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500">
+                          Yerləşdirilib: {new Date(job.created_at).toLocaleDateString('az-AZ')}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => router.push(`/${job.job_type === 'vakansiya' ? 'vakansiyalar' : 'gundelik-isler'}/${job.id}`)}
+                          className="px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        >
+                          Bax
+                        </button>
+                        <button
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          onClick={() => {
+                            if (confirm('Elanı silmək istədiyinizə əminsiniz?')) {
+                              toast.info('Funksiya tezliklə əlavə ediləcək')
+                            }
+                          }}
+                        >
+                          <TrashIcon className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,8 +1,11 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import toast from 'react-hot-toast'
 import Navigation from '@/components/ui/Navigation'
+import { getCurrentUser } from '@/lib/auth'
+import { createJob } from '@/lib/api/jobs'
 import { CATEGORIES, ShortJobCategory } from '@/components/short-jobs/CategoryIcons'
 import { PlusCircleIcon, BriefcaseIcon, ClockIcon } from '@heroicons/react/24/outline'
 
@@ -12,6 +15,8 @@ export default function PostJobPage() {
   const router = useRouter()
   const [jobType, setJobType] = useState<JobType>('vakansiya')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [user, setUser] = useState<any>(null)
 
   // Форма для обычных вакансий
   const [vakansiyaForm, setVakansiyaForm] = useState({
@@ -27,7 +32,6 @@ export default function PostJobPage() {
     description: '',
     requirements: '',
     benefits: '',
-    contactEmail: '',
     contactPhone: '',
   })
 
@@ -51,31 +55,97 @@ export default function PostJobPage() {
     setGundelikForm(prev => ({ ...prev, [field]: value }))
   }
 
+  // Check authentication on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const currentUser = await getCurrentUser()
+      setIsAuthenticated(!!currentUser)
+      setUser(currentUser)
+    }
+    checkAuth()
+  }, [])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
 
-    if (jobType === 'vakansiya') {
-      if (!vakansiyaForm.title || !vakansiyaForm.company || !vakansiyaForm.category || !vakansiyaForm.location) {
-        alert('Zəhmət olmasa bütün mütləq sahələri doldurun')
-        setIsSubmitting(false)
-        return
-      }
-      console.log('Vakansiya:', vakansiyaForm)
-    } else {
-      if (!gundelikForm.title || !gundelikForm.category || !gundelikForm.location || !gundelikForm.salary || !gundelikForm.phoneNumber) {
-        alert('Zəhmət olmasa bütün mütləq sahələri doldurun')
-        setIsSubmitting(false)
-        return
-      }
-      console.log('Gündəlik iş:', gundelikForm)
+    // Check authentication
+    if (!user) {
+      toast.error('Elan yerləşdirmək üçün daxil olun')
+      router.push('/')
+      return
     }
 
-    setTimeout(() => {
+    setIsSubmitting(true)
+
+    try {
+      if (jobType === 'vakansiya') {
+        if (!vakansiyaForm.title || !vakansiyaForm.company || !vakansiyaForm.category || !vakansiyaForm.location) {
+          toast.error('Zəhmət olmasa bütün mütləq sahələri doldurun')
+          setIsSubmitting(false)
+          return
+        }
+        if (!vakansiyaForm.contactPhone) {
+          toast.error('Telefon nömrəsi mütləqdir')
+          setIsSubmitting(false)
+          return
+        }
+
+        const result = await createJob(user.id, {
+          job_type: 'vakansiya',
+          title: vakansiyaForm.title,
+          company: vakansiyaForm.company,
+          category: vakansiyaForm.category,
+          location: vakansiyaForm.location,
+          salary: vakansiyaForm.salary || undefined,
+          description: vakansiyaForm.description || undefined,
+          employment_type: vakansiyaForm.employmentType || undefined,
+          experience: vakansiyaForm.experience || undefined,
+          education: vakansiyaForm.education || undefined,
+          deadline: vakansiyaForm.deadline || undefined,
+          requirements: vakansiyaForm.requirements || undefined,
+          benefits: vakansiyaForm.benefits || undefined,
+          contact_phone: vakansiyaForm.contactPhone,
+        })
+
+        if (!result.success) {
+          toast.error('Xəta: ' + result.error)
+          setIsSubmitting(false)
+          return
+        }
+
+      } else {
+        if (!gundelikForm.title || !gundelikForm.category || !gundelikForm.location || !gundelikForm.salary || !gundelikForm.phoneNumber) {
+          toast.error('Zəhmət olmasa bütün mütləq sahələri doldurun')
+          setIsSubmitting(false)
+          return
+        }
+
+        const result = await createJob(user.id, {
+          job_type: 'gundelik',
+          title: gundelikForm.title,
+          category: gundelikForm.category,
+          location: gundelikForm.location,
+          salary: gundelikForm.salary,
+          description: gundelikForm.description || undefined,
+          start_date: gundelikForm.startDate || undefined,
+          duration: gundelikForm.duration || undefined,
+          contact_phone: gundelikForm.phoneNumber,
+        })
+
+        if (!result.success) {
+          toast.error('Xəta: ' + result.error)
+          setIsSubmitting(false)
+          return
+        }
+      }
+
+      toast.success('Elan uğurla yerləşdirildi!')
+      router.push('/profile')
+    } catch (error) {
+      console.error('Submit error:', error)
+      toast.error('Xəta baş verdi')
       setIsSubmitting(false)
-      alert('Elan uğurla yerləşdirildi!')
-      router.push(jobType === 'vakansiya' ? '/vakansiyalar' : '/gundelik-isler')
-    }, 1000)
+    }
   }
 
   const categories = ['İT və Texnologiya', 'Marketinq', 'Dizayn', 'Satış', 'İdarəetmə', 'Maliyyə', 'İnsan Resursları', 'Digər']
@@ -88,9 +158,9 @@ export default function PostJobPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation
-        onLogin={() => console.log('Login')}
+        onLogin={() => router.push('/')}
         onPostJob={() => router.push('/post-job')}
-        isAuthenticated={false}
+        isAuthenticated={isAuthenticated}
       />
 
       {/* Hero Section */}
@@ -235,28 +305,18 @@ export default function PostJobPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                  <div>
-                    <label className="block text-sm font-semibold text-black mb-2">Email</label>
-                    <input
-                      type="email"
-                      value={vakansiyaForm.contactEmail}
-                      onChange={(e) => handleVakansiyaChange('contactEmail', e.target.value)}
-                      placeholder="hr@company.az"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-black mb-2">Telefon</label>
-                    <input
-                      type="tel"
-                      value={vakansiyaForm.contactPhone}
-                      onChange={(e) => handleVakansiyaChange('contactPhone', e.target.value)}
-                      placeholder="+994 50 123 45 67"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
-                    />
-                  </div>
+                <div className="mb-8">
+                  <label className="block text-sm font-semibold text-black mb-2">
+                    Telefon <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={vakansiyaForm.contactPhone}
+                    onChange={(e) => handleVakansiyaChange('contactPhone', e.target.value)}
+                    placeholder="+994 50 123 45 67"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
+                    required
+                  />
                 </div>
               </>
             ) : (

@@ -1,0 +1,182 @@
+import { createClient } from '../supabase/client'
+
+export type JobType = 'vakansiya' | 'gundelik'
+
+export type Job = {
+  id: string
+  user_id: string
+  job_type: JobType
+  title: string
+  category: string
+  location: string
+  salary?: string
+  description?: string
+  company?: string
+  employment_type?: string
+  experience?: string
+  education?: string
+  deadline?: string
+  requirements?: string
+  benefits?: string
+  start_date?: string
+  duration?: string
+  contact_phone: string
+  status: 'active' | 'inactive' | 'expired'
+  is_vip: boolean
+  is_urgent: boolean
+  views_count: number
+  created_at: string
+  updated_at: string
+}
+
+export type CreateJobData = {
+  job_type: JobType
+  title: string
+  category: string
+  location: string
+  salary?: string
+  description?: string
+  company?: string
+  employment_type?: string
+  experience?: string
+  education?: string
+  deadline?: string
+  requirements?: string
+  benefits?: string
+  start_date?: string
+  duration?: string
+  contact_phone: string
+}
+
+/**
+ * Create a new job/elan
+ */
+export async function createJob(
+  userId: string,
+  jobData: CreateJobData
+): Promise<{ success: boolean; jobId?: string; error?: string }> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('jobs')
+    .insert({
+      user_id: userId,
+      ...jobData,
+    })
+    .select('id')
+    .single()
+
+  if (error) {
+    console.error('Error creating job:', error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true, jobId: data.id }
+}
+
+/**
+ * Get all jobs for a user
+ */
+export async function getUserJobs(userId: string): Promise<Job[]> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('jobs')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching user jobs:', error)
+    return []
+  }
+
+  return data || []
+}
+
+/**
+ * Get a single job by ID
+ */
+export async function getJob(jobId: string): Promise<Job | null> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('jobs')
+    .select('*')
+    .eq('id', jobId)
+    .single()
+
+  if (error) {
+    console.error('Error fetching job:', error)
+    return null
+  }
+
+  return data
+}
+
+/**
+ * Update a job
+ */
+export async function updateJob(
+  jobId: string,
+  updates: Partial<CreateJobData>
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('jobs')
+    .update(updates)
+    .eq('id', jobId)
+
+  if (error) {
+    console.error('Error updating job:', error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}
+
+/**
+ * Delete a job
+ */
+export async function deleteJob(jobId: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('jobs')
+    .delete()
+    .eq('id', jobId)
+
+  if (error) {
+    console.error('Error deleting job:', error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}
+
+/**
+ * Get all active jobs (public)
+ */
+export async function getActiveJobs(jobType?: JobType): Promise<Job[]> {
+  const supabase = createClient()
+
+  let query = supabase
+    .from('jobs')
+    .select('*')
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+
+  if (jobType) {
+    query = query.eq('job_type', jobType)
+  }
+
+  const { data, error } = await query
+
+  if (error) {
+    console.error('Error fetching active jobs:', error)
+    return []
+  }
+
+  return data || []
+}
