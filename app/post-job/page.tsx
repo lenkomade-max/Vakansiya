@@ -108,9 +108,19 @@ export default function PostJobPage() {
         })
 
         if (!result.success) {
-          toast.error('Xəta: ' + result.error)
+          toast.error(result.error || 'Xəta baş verdi')
           setIsSubmitting(false)
           return
+        }
+
+        // Show status message
+        if (result.status === 'active') {
+          toast.success('Elan avtomatik təsdiqləndi və dərc olundu!')
+        } else if (result.status === 'pending_review') {
+          toast('Elan yoxlanışa göndərildi. Təsdiq edildikdən sonra dərc olunacaq.', {
+            icon: '⏳',
+            duration: 5000,
+          })
         }
 
       } else {
@@ -133,13 +143,22 @@ export default function PostJobPage() {
         })
 
         if (!result.success) {
-          toast.error('Xəta: ' + result.error)
+          toast.error(result.error || 'Xəta baş verdi')
           setIsSubmitting(false)
           return
         }
+
+        // Show status message
+        if (result.status === 'active') {
+          toast.success('Elan avtomatik təsdiqləndi və dərc olundu!')
+        } else if (result.status === 'pending_review') {
+          toast('Elan yoxlanışa göndərildi. Təsdiq edildikdən sonra dərc olunacaq.', {
+            icon: '⏳',
+            duration: 5000,
+          })
+        }
       }
 
-      toast.success('Elan uğurla yerləşdirildi!')
       router.push('/profile')
     } catch (error) {
       console.error('Submit error:', error)

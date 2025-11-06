@@ -313,7 +313,7 @@ export default function ProfilePage() {
                   <div key={job.id} className="border border-gray-200 rounded-xl p-4 hover:border-gray-300 transition-colors">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <h3 className="text-lg font-semibold text-black">{job.title}</h3>
                           <span className={`px-2 py-1 text-xs font-medium rounded ${
                             job.job_type === 'vakansiya'
@@ -322,19 +322,34 @@ export default function ProfilePage() {
                           }`}>
                             {job.job_type === 'vakansiya' ? 'Vakansiya' : 'Gündəlik'}
                           </span>
-                          {job.status !== 'active' && (
-                            <span className="px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-600">
-                              {job.status}
-                            </span>
-                          )}
+                          <span className={`px-2 py-1 text-xs font-medium rounded ${
+                            job.status === 'active'
+                              ? 'bg-green-100 text-green-700'
+                              : job.status === 'pending_review'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : job.status === 'rejected'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}>
+                            {job.status === 'active' && '✓ Aktiv'}
+                            {job.status === 'pending_review' && '⏳ Yoxlanışda'}
+                            {job.status === 'rejected' && '✗ Rədd edildi'}
+                            {job.status === 'inactive' && 'Deaktiv'}
+                            {job.status === 'expired' && 'Müddəti bitib'}
+                          </span>
                         </div>
                         <div className="flex flex-wrap gap-3 text-sm text-gray-600">
                           {job.company && <span>{job.company}</span>}
                           <span>{job.location}</span>
                           {job.salary && <span className="font-medium text-black">{job.salary}</span>}
                         </div>
-                        <div className="mt-2 text-xs text-gray-500">
-                          Yerləşdirilib: {new Date(job.created_at).toLocaleDateString('az-AZ')}
+                        <div className="mt-2 flex gap-4 text-xs text-gray-500">
+                          <span>Yerləşdirilib: {new Date(job.created_at).toLocaleDateString('az-AZ')}</span>
+                          {job.status === 'active' && (
+                            <span>
+                              Bitmə tarixi: {new Date(job.expires_at).toLocaleDateString('az-AZ')}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="flex gap-2">

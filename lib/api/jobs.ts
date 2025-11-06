@@ -1,4 +1,6 @@
 import { createClient } from '../supabase/client'
+import { aiModerationWithFallback } from '../moderation/ai'
+import { checkRules } from '../moderation/rules'
 
 export type JobType = 'vakansiya' | 'gundelik'
 
@@ -21,10 +23,11 @@ export type Job = {
   start_date?: string
   duration?: string
   contact_phone: string
-  status: 'active' | 'inactive' | 'expired'
+  status: 'pending_review' | 'active' | 'inactive' | 'expired' | 'rejected'
   is_vip: boolean
   is_urgent: boolean
   views_count: number
+  expires_at: string
   created_at: string
   updated_at: string
 }
@@ -49,19 +52,68 @@ export type CreateJobData = {
 }
 
 /**
- * Create a new job/elan
+ * Create a new job/elan with AI moderation
  */
 export async function createJob(
   userId: string,
   jobData: CreateJobData
-): Promise<{ success: boolean; jobId?: string; error?: string }> {
+): Promise<{ success: boolean; jobId?: string; error?: string; status?: string }> {
   const supabase = createClient()
 
+  // Prepare job post for moderation
+  const jobPost = {
+    title: jobData.title,
+    description: jobData.description || '',
+    company: jobData.company || '',
+    salary: jobData.salary || '',
+    location: jobData.location,
+  }
+
+  // Run rules-based check first
+  const rulesFlags = checkRules(jobPost)
+
+  let finalStatus: 'pending_review' | 'active' | 'rejected' = 'pending_review'
+
+  // If rules found issues, send to manual review
+  if (rulesFlags.length > 0) {
+    console.log('Rules found issues, sending to manual review:', rulesFlags)
+    finalStatus = 'pending_review'
+  } else {
+    // No rule violations, check with AI
+    try {
+      const aiResult = await aiModerationWithFallback(jobPost, rulesFlags)
+
+      console.log('AI moderation result:', aiResult)
+
+      // AI approved with high confidence → auto approve
+      if (aiResult.approved && aiResult.confidence >= 0.9) {
+        finalStatus = 'active'
+      }
+      // AI rejected with high confidence → auto reject
+      else if (!aiResult.approved && aiResult.confidence >= 0.9 && aiResult.recommendation === 'reject') {
+        finalStatus = 'rejected'
+        return {
+          success: false,
+          error: `Elan avtomatik olaraq rədd edildi: ${aiResult.reason}`
+        }
+      }
+      // Low confidence or manual_review → send to review
+      else {
+        finalStatus = 'pending_review'
+      }
+    } catch (error) {
+      console.error('AI moderation failed, defaulting to manual review:', error)
+      finalStatus = 'pending_review'
+    }
+  }
+
+  // Insert job with determined status
   const { data, error } = await supabase
     .from('jobs')
     .insert({
       user_id: userId,
       ...jobData,
+      status: finalStatus,
     })
     .select('id')
     .single()
@@ -71,7 +123,7 @@ export async function createJob(
     return { success: false, error: error.message }
   }
 
-  return { success: true, jobId: data.id }
+  return { success: true, jobId: data.id, status: finalStatus }
 }
 
 /**

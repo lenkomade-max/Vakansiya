@@ -34,12 +34,13 @@ CREATE TABLE IF NOT EXISTS jobs (
     contact_phone TEXT NOT NULL,
 
     -- Статус
-    status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'expired')),
+    status TEXT DEFAULT 'pending_review' CHECK (status IN ('pending_review', 'active', 'inactive', 'expired', 'rejected')),
     is_vip BOOLEAN DEFAULT FALSE,
     is_urgent BOOLEAN DEFAULT FALSE,
 
     -- Метаданные
     views_count INTEGER DEFAULT 0,
+    expires_at TIMESTAMP WITH TIME ZONE DEFAULT (NOW() + INTERVAL '30 days'),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
