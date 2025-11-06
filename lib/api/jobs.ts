@@ -1,6 +1,6 @@
 import { createClient } from '../supabase/client'
 import { aiModerationWithFallback } from '../moderation/ai'
-import { checkRules } from '../moderation/rules'
+import { moderateContent } from '../moderation/rules'
 
 export type JobType = 'vakansiya' | 'gundelik'
 
@@ -70,18 +70,18 @@ export async function createJob(
   }
 
   // Run rules-based check first
-  const rulesFlags = checkRules(jobPost)
+  const moderationResult = await moderateContent(jobPost)
 
   let finalStatus: 'pending_review' | 'active' | 'rejected' = 'pending_review'
 
   // If rules found issues, send to manual review
-  if (rulesFlags.length > 0) {
-    console.log('Rules found issues, sending to manual review:', rulesFlags)
+  if (!moderationResult.approved || moderationResult.flags.length > 0) {
+    console.log('Rules found issues, sending to manual review:', moderationResult.flags)
     finalStatus = 'pending_review'
   } else {
     // No rule violations, check with AI
     try {
-      const aiResult = await aiModerationWithFallback(jobPost, rulesFlags)
+      const aiResult = await aiModerationWithFallback(jobPost, moderationResult.flags)
 
       console.log('AI moderation result:', aiResult)
 

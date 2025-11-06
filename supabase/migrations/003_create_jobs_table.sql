@@ -3,7 +3,10 @@
 -- Хранит вакансии и гундалик работы
 -- ============================================
 
-CREATE TABLE IF NOT EXISTS jobs (
+-- Удалить старую таблицу и все политики
+DROP TABLE IF EXISTS jobs CASCADE;
+
+CREATE TABLE jobs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
 
