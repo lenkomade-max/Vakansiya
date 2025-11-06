@@ -1,9 +1,11 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Navigation from '@/components/ui/Navigation'
 import ContactModal from '@/components/ui/ContactModal'
+import { getJob, Job } from '@/lib/api/jobs'
+import { getCurrentUser } from '@/lib/auth'
 import { CategoryIcon, CATEGORIES, ShortJobCategory } from '@/components/short-jobs/CategoryIcons'
 import {
   MapPinIcon,
@@ -18,47 +20,38 @@ import { FireIcon } from '@heroicons/react/24/solid'
 export default function ShortJobDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const [job, setJob] = useState<Job | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isContactModalOpen, setIsContactModalOpen] = useState(false)
 
-  // В реальности данные будут загружаться из API
-  // Пока используем fake данные
-  const job = {
-    id: params.id as string,
-    title: 'Taksi sürücüsü',
-    category: 'transport' as ShortJobCategory,
-    location: 'Bakı, Nəsimi',
-    salary: '80 AZN/gün',
-    startDate: 'Bu gün',
-    duration: '3 gün',
-    isVIP: true,
-    isUrgent: false,
-    description: `Bakı şəhərinin müxtəlif rayonlarında sərnişin daşıma xidməti üçün təcrübəli sürücü axtarılır.
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true)
 
-İş şəraiti:
-• Gündəlik 10-12 saat iş rejimi
-• Maşın təmin olunur
-• Yanacaq xərcləri işəgötürən tərəfindən ödənilir
-• Təmiz gündəlik ödəniş
+      // Check authentication
+      const currentUser = await getCurrentUser()
+      setIsAuthenticated(!!currentUser)
 
-Tələblər:
-• B kateqoriyalı sürücülük vəsiqəsi
-• Minimum 2 il sürücülük təcrübəsi
-• Bakı şəhərini yaxşı bilmək
-• Səliqəli və mehriban olmaq
+      // Load job data
+      const jobId = params.id as string
+      const jobData = await getJob(jobId)
 
-Əlavə imkanlar:
-• Hər gün ödəniş
-• Şəffaf hesablaşma sistemi
-• Uzunmüddətli əməkdaşlıq imkanı`,
-    phoneNumber: '+994501234567',
-    postedAt: '1 saat əvvəl',
-    views: 127,
-  }
+      if (!jobData) {
+        // Job not found - redirect to catalog
+        router.push('/gundelik-isler')
+        return
+      }
 
-  const categoryConfig = CATEGORIES.find(c => c.id === job.category)
+      setJob(jobData)
+      setLoading(false)
+    }
+
+    loadData()
+  }, [params.id, router])
 
   const handleLogin = () => {
-    console.log('Вход')
+    router.push('/')
   }
 
   const handlePostJob = () => {
@@ -73,13 +66,54 @@ Tələblər:
     router.back()
   }
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation
+          onLogin={handleLogin}
+          onPostJob={handlePostJob}
+          isAuthenticated={isAuthenticated}
+        />
+        <div className="container mx-auto px-4 max-w-4xl py-20 text-center">
+          <div className="w-12 h-12 border-4 border-black border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Yüklənir...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Job not found
+  if (!job) {
+    return null
+  }
+
+  // Helper to format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+    if (diffHours < 24) {
+      return `${diffHours} saat əvvəl`
+    } else if (diffDays < 7) {
+      return `${diffDays} gün əvvəl`
+    } else {
+      return date.toLocaleDateString('az-AZ')
+    }
+  }
+
+  const categoryConfig = CATEGORIES.find(c => c.id === job.category)
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Навигация */}
       <Navigation
         onLogin={handleLogin}
         onPostJob={handlePostJob}
-        isAuthenticated={false}
+        isAuthenticated={isAuthenticated}
       />
 
       {/* Main Content */}
@@ -101,14 +135,14 @@ Tələblər:
 
             {/* Badges */}
             <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2">
-              {job.isVIP && (
+              {job.is_vip && (
                 <span className="px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold rounded shadow-md flex items-center gap-1">
                   <FireIcon className="w-4 h-4" />
                   VIP
                 </span>
               )}
 
-              {job.isUrgent && (
+              {job.is_urgent && (
                 <span className="px-3 py-1.5 bg-red-500 text-white font-bold rounded shadow-md text-xs whitespace-nowrap flex items-center gap-1">
                   <span className="w-2 h-2 bg-white rounded-full"></span>
                   TƏCİLİ
@@ -126,7 +160,7 @@ Tələblər:
                   {categoryConfig?.nameAz}
                 </span>
                 <span className="text-sm text-gray-500">
-                  {job.postedAt}
+                  {formatDate(job.created_at)}
                 </span>
               </div>
 
@@ -146,10 +180,12 @@ Tələblər:
                   <span className="font-bold text-black">{job.salary}</span>
                 </div>
 
-                <div className="flex items-center gap-2 text-gray-700">
-                  <CalendarIcon className="w-5 h-5 text-gray-400" />
-                  <span>Başlama: <span className="font-medium">{job.startDate}</span></span>
-                </div>
+                {job.start_date && (
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <CalendarIcon className="w-5 h-5 text-gray-400" />
+                    <span>Başlama: <span className="font-medium">{job.start_date}</span></span>
+                  </div>
+                )}
 
                 {job.duration && (
                   <div className="flex items-center gap-2 text-gray-700">
@@ -172,7 +208,7 @@ Tələblər:
 
             {/* Stats */}
             <div className="flex items-center gap-4 text-sm text-gray-500 pb-6 border-b border-gray-200">
-              <span>{job.views} baxış</span>
+              <span>{job.views_count} baxış</span>
             </div>
 
             {/* Contact Button */}
@@ -205,7 +241,7 @@ Tələblər:
       <ContactModal
         isOpen={isContactModalOpen}
         onClose={() => setIsContactModalOpen(false)}
-        phoneNumber={job.phoneNumber}
+        phoneNumber={job.contact_phone}
         jobTitle={job.title}
       />
 
