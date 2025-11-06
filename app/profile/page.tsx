@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Navigation from '@/components/ui/Navigation'
 import { getCurrentUser, signOut } from '@/lib/auth'
+import { getProfile, updateProfile } from '@/lib/api/profile'
 import { UserIcon, EnvelopeIcon, PhoneIcon, BriefcaseIcon } from '@heroicons/react/24/outline'
 
 export default function ProfilePage() {
@@ -23,7 +24,16 @@ export default function ProfilePage() {
         return
       }
       setUser(currentUser)
-      setFullName(currentUser.user_metadata?.full_name || '')
+
+      // Load profile from database
+      const profile = await getProfile(currentUser.id)
+      if (profile) {
+        setFullName(profile.full_name || currentUser.user_metadata?.full_name || '')
+        setPhone(profile.phone || '')
+      } else {
+        setFullName(currentUser.user_metadata?.full_name || '')
+      }
+
       setLoading(false)
     }
     loadUser()
@@ -33,22 +43,37 @@ export default function ProfilePage() {
     await signOut()
   }
 
-  const handleSaveName = () => {
-    // TODO: Save name to database
-    setIsEditingName(false)
-    alert('Ad yadda saxlanıldı')
+  const handleSaveName = async () => {
+    if (!user) return
+
+    const result = await updateProfile(user.id, { full_name: fullName })
+
+    if (result.success) {
+      setIsEditingName(false)
+      alert('Ad yadda saxlanıldı')
+    } else {
+      alert('Xəta baş verdi: ' + result.error)
+    }
   }
 
-  const handleSavePhone = () => {
+  const handleSavePhone = async () => {
+    if (!user) return
+
     // Validate phone format: should be 9 digits (XX XXX XX XX)
     const digitsOnly = phone.replace(/\s/g, '')
     if (digitsOnly.length !== 9) {
       alert('Zəhmət olmasa düzgün format daxil edin: XX XXX XX XX')
       return
     }
-    // TODO: Save phone to database
-    setIsEditingPhone(false)
-    alert('Telefon nömrəsi yadda saxlanıldı')
+
+    const result = await updateProfile(user.id, { phone })
+
+    if (result.success) {
+      setIsEditingPhone(false)
+      alert('Telefon nömrəsi yadda saxlanıldı')
+    } else {
+      alert('Xəta baş verdi: ' + result.error)
+    }
   }
 
   const formatPhoneInput = (value: string) => {
