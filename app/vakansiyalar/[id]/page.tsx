@@ -1,8 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Navigation from '@/components/ui/Navigation'
+import { getJob, Job } from '@/lib/api/jobs'
+import { getCurrentUser } from '@/lib/auth'
 import {
   MapPinIcon,
   ClockIcon,
@@ -18,66 +20,37 @@ import { FireIcon } from '@heroicons/react/24/solid'
 export default function VakansiyaDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const [vakansiya, setVakansiya] = useState<Job | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-  // В реальности данные будут загружаться из API
-  const vakansiya = {
-    id: params.id as string,
-    title: 'Frontend Developer',
-    company: 'ABC Tech',
-    companyLogo: '/placeholder-logo.png',
-    location: 'Bakı, Nəsimi',
-    salary: '1500-2500 AZN',
-    category: 'İT və Texnologiya',
-    isRemote: true,
-    isVIP: true,
-    isUrgent: false,
-    postedAt: '2 saat əvvəl',
-    views: 234,
-    applicants: 12,
-    deadline: '15 Noyabr 2025',
-    employmentType: 'Tam ştat',
-    experience: '2-3 il',
-    education: 'Ali',
-    description: `ABC Tech şirkəti komandası üçün Frontend Developer axtarır.
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true)
 
-Vəzifə öhdəlikləri:
-• Modern web tətbiqlərinin frontend hissəsinin hazırlanması
-• React və Next.js istifadə edərək SPA yaratmaq
-• Responsive və mobile-friendly interfeyslər
-• API inteqrasiyaları
-• Kod keyfiyyətinin yüksək səviyyədə saxlanması
+      // Check authentication
+      const currentUser = await getCurrentUser()
+      setIsAuthenticated(!!currentUser)
 
-Tələblər:
-• HTML, CSS, JavaScript/TypeScript - mükəmməl səviyyədə
-• React və Next.js - komanda səviyyəsində
-• Git istifadə təcrübəsi
-• RESTful API ilə işləmək bacarığı
-• Ingilis dili - oxu, yaz səviyyəsində
+      // Load job data
+      const jobId = params.id as string
+      const jobData = await getJob(jobId)
 
-Təklif olunanlar:
-• Rəqabətli maaş
-• Distant iş imkanı
-• Peşəkar komanda
-• Müasir texnologiyalar
-• Karyera inkişafı`,
-    requirements: [
-      'HTML, CSS, JavaScript/TypeScript',
-      'React və Next.js',
-      'Git və GitHub',
-      'RESTful API',
-      'Ingilis dili'
-    ],
-    benefits: [
-      'Rəqabətli maaş',
-      'Distant iş',
-      'Peşəkar komanda',
-      'Karyera inkişafı',
-      'Müasir texnologiyalar'
-    ]
-  }
+      if (!jobData) {
+        // Job not found - redirect to 404 or catalog
+        router.push('/vakansiyalar')
+        return
+      }
+
+      setVakansiya(jobData)
+      setLoading(false)
+    }
+
+    loadData()
+  }, [params.id, router])
 
   const handleLogin = () => {
-    console.log('Вход')
+    router.push('/')
   }
 
   const handlePostJob = () => {
@@ -93,13 +66,52 @@ Təklif olunanlar:
     router.back()
   }
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation
+          onLogin={handleLogin}
+          onPostJob={handlePostJob}
+          isAuthenticated={isAuthenticated}
+        />
+        <div className="container mx-auto px-4 max-w-4xl py-20 text-center">
+          <div className="w-12 h-12 border-4 border-black border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Yüklənir...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Job not found
+  if (!vakansiya) {
+    return null
+  }
+
+  // Helper to format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+    if (diffHours < 24) {
+      return `${diffHours} saat əvvəl`
+    } else if (diffDays < 7) {
+      return `${diffDays} gün əvvəl`
+    } else {
+      return date.toLocaleDateString('az-AZ')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Навигация */}
       <Navigation
         onLogin={handleLogin}
         onPostJob={handlePostJob}
-        isAuthenticated={false}
+        isAuthenticated={isAuthenticated}
       />
 
       {/* Main Content */}
@@ -126,13 +138,13 @@ Təklif olunanlar:
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    {vakansiya.isVIP && (
+                    {vakansiya.is_vip && (
                       <span className="px-2 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold rounded flex items-center gap-1">
                         <FireIcon className="w-3 h-3" />
                         VIP
                       </span>
                     )}
-                    {vakansiya.isUrgent && (
+                    {vakansiya.is_urgent && (
                       <span className="px-2 py-1 bg-red-500 text-white font-bold rounded text-xs whitespace-nowrap flex items-center gap-1">
                         <span className="w-2 h-2 bg-white rounded-full"></span>
                         TƏCİLİ
@@ -153,7 +165,7 @@ Təklif olunanlar:
 
                   <div className="flex items-center gap-1 text-sm text-gray-500">
                     <ClockIcon className="w-4 h-4" />
-                    <span>{vakansiya.postedAt}</span>
+                    <span>{formatDate(vakansiya.created_at)}</span>
                   </div>
                 </div>
               </div>
@@ -181,20 +193,23 @@ Təklif olunanlar:
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <BriefcaseIcon className="w-5 h-5 text-gray-600" />
+                  {vakansiya.employment_type && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <BriefcaseIcon className="w-5 h-5 text-gray-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">İş rejimi</p>
+                        <p className="text-sm font-semibold text-black">{vakansiya.employment_type}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-500">İş rejimi</p>
-                      <p className="text-sm font-semibold text-black">{vakansiya.employmentType}</p>
-                    </div>
-                  </div>
+                  )}
 
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <CalendarIcon className="w-5 h-5 text-gray-600" />
-                    </div>
+                  {vakansiya.deadline && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <CalendarIcon className="w-5 h-5 text-gray-600" />
+                      </div>
                     <div>
                       <p className="text-xs text-gray-500">Son tarix</p>
                       <p className="text-sm font-semibold text-black">{vakansiya.deadline}</p>
@@ -213,36 +228,26 @@ Təklif olunanlar:
                 </div>
 
                 {/* Requirements */}
-                {vakansiya.requirements.length > 0 && (
+                {vakansiya.requirements && (
                   <div className="mb-6">
                     <h3 className="text-base font-bold text-black mb-3">
                       Tələblər
                     </h3>
-                    <ul className="space-y-2">
-                      {vakansiya.requirements.map((req, index) => (
-                        <li key={index} className="flex items-start gap-2 text-gray-700">
-                          <span className="w-1.5 h-1.5 bg-black rounded-full mt-2 flex-shrink-0"></span>
-                          <span>{req}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="text-gray-700 whitespace-pre-line">
+                      {vakansiya.requirements}
+                    </div>
                   </div>
                 )}
 
                 {/* Benefits */}
-                {vakansiya.benefits.length > 0 && (
+                {vakansiya.benefits && (
                   <div>
                     <h3 className="text-base font-bold text-black mb-3">
                       Təklif olunanlar
                     </h3>
-                    <ul className="space-y-2">
-                      {vakansiya.benefits.map((benefit, index) => (
-                        <li key={index} className="flex items-start gap-2 text-gray-700">
-                          <span className="w-1.5 h-1.5 bg-green-500 rounded-full mt-2 flex-shrink-0"></span>
-                          <span>{benefit}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="text-gray-700 whitespace-pre-line">
+                      {vakansiya.benefits}
+                    </div>
                   </div>
                 )}
               </div>
@@ -262,16 +267,8 @@ Təklif olunanlar:
 
               <div className="space-y-3 text-sm">
                 <div className="flex items-center justify-between text-gray-600">
-                  <span className="flex items-center gap-2">
-                    <UserGroupIcon className="w-4 h-4" />
-                    Müraciətlər
-                  </span>
-                  <span className="font-semibold text-black">{vakansiya.applicants}</span>
-                </div>
-
-                <div className="flex items-center justify-between text-gray-600">
                   <span>Baxış sayı</span>
-                  <span className="font-semibold text-black">{vakansiya.views}</span>
+                  <span className="font-semibold text-black">{vakansiya.views_count}</span>
                 </div>
               </div>
             </div>
