@@ -18,4 +18,4 @@ export async function GET(request: NextRequest) {
   return NextResponse.redirect(new URL('/', requestUrl.origin))
 }
 
-export const runtime = 'edge'
+// Removed edge runtime to fix build

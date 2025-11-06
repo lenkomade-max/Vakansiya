@@ -1,7 +1,8 @@
-import { supabase } from './supabase'
+import { createClient } from './supabase'
 
 export async function signInWithGoogle() {
   try {
+    const supabase = createClient()
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -17,6 +18,7 @@ export async function signInWithGoogle() {
 
 export async function signOut() {
   try {
+    const supabase = createClient()
     const { error } = await supabase.auth.signOut()
     if (error) throw error
     window.location.href = '/'
@@ -27,6 +29,7 @@ export async function signOut() {
 }
 
 export async function getCurrentUser() {
+  const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   return user
 }
