@@ -3,16 +3,27 @@ import { createClient } from './supabase/client'
 export async function signInWithGoogle() {
   try {
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithOAuth({
+    console.log('Starting Google OAuth...')
+    console.log('Redirect URL:', `${window.location.origin}/auth/callback`)
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`
       }
     })
-    if (error) throw error
-  } catch (error) {
+
+    console.log('OAuth response:', { data, error })
+
+    if (error) {
+      console.error('OAuth error details:', error)
+      throw error
+    }
+  } catch (error: any) {
     console.error('Login xətası:', error)
-    alert('Giriş zamanı xəta baş verdi')
+    console.error('Error message:', error?.message)
+    console.error('Error details:', JSON.stringify(error, null, 2))
+    alert(`Giriş xətası: ${error?.message || 'Unknown error'}`)
   }
 }
 
