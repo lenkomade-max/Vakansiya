@@ -17,6 +17,23 @@ import {
 } from '@heroicons/react/24/outline'
 import { FireIcon } from '@heroicons/react/24/solid'
 
+// Helper to format date
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+  if (diffHours < 24) {
+    return `${diffHours} saat əvvəl`
+  } else if (diffDays < 7) {
+    return `${diffDays} gün əvvəl`
+  } else {
+    return date.toLocaleDateString('az-AZ')
+  }
+}
+
 export default function VakansiyaDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -86,23 +103,6 @@ export default function VakansiyaDetailPage() {
   // Job not found
   if (!vakansiya) {
     return null
-  }
-
-  // Helper to format date
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-    if (diffHours < 24) {
-      return `${diffHours} saat əvvəl`
-    } else if (diffDays < 7) {
-      return `${diffDays} gün əvvəl`
-    } else {
-      return date.toLocaleDateString('az-AZ')
-    }
   }
 
   return (
