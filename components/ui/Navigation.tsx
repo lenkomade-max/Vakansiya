@@ -49,10 +49,13 @@ export const Navigation: React.FC<NavigationProps> = ({
                 </a>
 
                 {/* Post Job Button */}
-                <Button variant="primary" size="sm" onClick={onPostJob}>
-                  <span className="hidden md:inline">Vakansiya yerləşdir</span>
-                  <span className="md:hidden">Elan</span>
-                </Button>
+                <button
+                  onClick={onPostJob}
+                  className="px-2.5 md:px-6 py-2 bg-black text-white text-xs md:text-base font-semibold rounded-lg hover:bg-gray-800 transition-colors whitespace-nowrap"
+                >
+                  <span className="hidden sm:inline">Elan yerləşdir</span>
+                  <span className="sm:hidden">Elan</span>
+                </button>
               </>
             ) : (
               <>
@@ -66,8 +69,8 @@ export const Navigation: React.FC<NavigationProps> = ({
                   onClick={onPostJob}
                   className="px-2.5 md:px-6 py-2 bg-black text-white text-xs md:text-base font-semibold rounded-lg hover:bg-gray-800 transition-colors whitespace-nowrap"
                 >
-                  <span className="hidden sm:inline">Vakansiya yerləşdir</span>
-                  <span className="sm:hidden">Elan yerləşdir</span>
+                  <span className="hidden sm:inline">Elan yerləşdir</span>
+                  <span className="sm:hidden">Elan</span>
                 </button>
               </>
             )}

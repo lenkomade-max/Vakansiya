@@ -247,7 +247,7 @@ export default function CompaniesPage() {
             onClick={handlePostJob}
             className="px-6 md:px-8 py-3 md:py-4 bg-white text-black rounded-full font-semibold hover:bg-gray-100 transition-all text-sm md:text-base"
           >
-            Vakansiya yerləşdir →
+            Elan yerləşdir →
           </button>
         </div>
       </section>

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import toast from 'react-hot-toast'
 import Navigation from '@/components/ui/Navigation'
 import { getCurrentUser, signOut } from '@/lib/auth'
 import { getProfile, updateProfile } from '@/lib/api/profile'
@@ -50,9 +51,9 @@ export default function ProfilePage() {
 
     if (result.success) {
       setIsEditingName(false)
-      alert('Ad yadda saxlanıldı')
+      toast.success('Ad yadda saxlanıldı')
     } else {
-      alert('Xəta baş verdi: ' + result.error)
+      toast.error('Xəta baş verdi: ' + result.error)
     }
   }
 
@@ -62,7 +63,7 @@ export default function ProfilePage() {
     // Validate phone format: should be 9 digits (XX XXX XX XX)
     const digitsOnly = phone.replace(/\s/g, '')
     if (digitsOnly.length !== 9) {
-      alert('Zəhmət olmasa düzgün format daxil edin: XX XXX XX XX')
+      toast.error('Zəhmət olmasa düzgün format daxil edin: XX XXX XX XX')
       return
     }
 
@@ -70,9 +71,9 @@ export default function ProfilePage() {
 
     if (result.success) {
       setIsEditingPhone(false)
-      alert('Telefon nömrəsi yadda saxlanıldı')
+      toast.success('Telefon nömrəsi yadda saxlanıldı')
     } else {
-      alert('Xəta baş verdi: ' + result.error)
+      toast.error('Xəta baş verdi: ' + result.error)
     }
   }
 
@@ -106,7 +107,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navigation isAuthenticated={true} />
+        <Navigation isAuthenticated={true} onPostJob={() => router.push('/post-job')} />
         <div className="container-main py-20 text-center">
           <div className="text-lg text-gray-600">Yüklənir...</div>
         </div>
@@ -120,7 +121,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation isAuthenticated={true} />
+      <Navigation isAuthenticated={true} onPostJob={() => router.push('/post-job')} />
 
       <div className="container-main py-8">
         <div className="max-w-4xl mx-auto">

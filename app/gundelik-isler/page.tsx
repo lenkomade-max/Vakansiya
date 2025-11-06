@@ -289,7 +289,7 @@ export default function GundelikIslerPage() {
             <div>
               <h3 className="font-semibold text-black mb-3 text-sm md:text-base">İşəgötürənlər</h3>
               <ul className="space-y-2 text-xs md:text-sm text-gray-600">
-                <li><a href="/post-job">Vakansiya yerləşdir</a></li>
+                <li><a href="/post-job">Elan yerləşdir</a></li>
                 <li><a href="/pricing">Qiymətlər</a></li>
               </ul>
             </div>

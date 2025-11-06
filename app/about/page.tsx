@@ -117,14 +117,14 @@ export default function AboutPage() {
             Bizimlə işə başlayın
           </h2>
           <p className="text-lg text-white/80 mb-8">
-            Vakansiya yerləşdirin və ya iş axtarışına başlayın
+            Elan yerləşdirin və ya iş axtarışına başlayın
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={() => router.push('/post-job')}
               className="px-8 py-4 bg-white text-black rounded-full font-semibold hover:bg-gray-100 transition-all"
             >
-              Vakansiya yerləşdir
+              Elan yerləşdir
             </button>
             <button
               onClick={() => router.push('/vakansiyalar')}

@@ -397,7 +397,7 @@ export default function CreateVakansiyaPage() {
                 ) : (
                   <>
                     <PlusCircleIcon className="w-6 h-6" />
-                    Vakansiya yerləşdir
+                    Elan yerləşdir
                   </>
                 )}
               </button>
@@ -452,7 +452,7 @@ export default function CreateVakansiyaPage() {
             <div>
               <h3 className="font-semibold text-black mb-3 text-sm md:text-base">İşəgötürənlər</h3>
               <ul className="space-y-2 text-xs md:text-sm text-gray-600">
-                <li><a href="/vakansiyalar/yeni">Vakansiya yerləşdir</a></li>
+                <li><a href="/vakansiyalar/yeni">Elan yerləşdir</a></li>
                 <li><a href="/pricing">Qiymətlər</a></li>
               </ul>
             </div>
