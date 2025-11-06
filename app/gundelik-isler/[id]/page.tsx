@@ -17,24 +17,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { FireIcon } from '@heroicons/react/24/solid'
 
-// Helper to format date
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-  if (diffHours < 24) {
-    return `${diffHours} saat əvvəl`
-  } else if (diffDays < 7) {
-    return `${diffDays} gün əvvəl`
-  } else {
-    return date.toLocaleDateString('az-AZ')
-  }
-}
-
-export default function ShortJobDetailPage() {
+function ShortJobDetailPage() {
   const params = useParams()
   const router = useRouter()
   const [job, setJob] = useState<Job | null>(null)
@@ -81,6 +64,23 @@ export default function ShortJobDetailPage() {
 
   const handleBack = () => {
     router.back()
+  }
+
+  // Helper to format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+    if (diffHours < 24) {
+      return `${diffHours} saat əvvəl`
+    } else if (diffDays < 7) {
+      return `${diffDays} gün əvvəl`
+    } else {
+      return date.toLocaleDateString('az-AZ')
+    }
   }
 
   // Loading state
@@ -295,3 +295,5 @@ export default function ShortJobDetailPage() {
     </div>
   )
 }
+
+export default ShortJobDetailPage
