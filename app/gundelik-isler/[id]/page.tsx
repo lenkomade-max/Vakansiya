@@ -17,7 +17,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { FireIcon } from '@heroicons/react/24/solid'
 
-function ShortJobDetailPage() {
+export default function ShortJobDetailPage() {
   const params = useParams()
   const router = useRouter()
   const [job, setJob] = useState<Job | null>(null)
@@ -295,5 +295,3 @@ function ShortJobDetailPage() {
     </div>
   )
 }
-
-export default ShortJobDetailPage

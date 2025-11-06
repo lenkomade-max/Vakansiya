@@ -17,7 +17,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { FireIcon } from '@heroicons/react/24/solid'
 
-function VakansiyaDetailPage() {
+export default function VakansiyaDetailPage() {
   const params = useParams()
   const router = useRouter()
   const [vakansiya, setVakansiya] = useState<Job | null>(null)
@@ -355,5 +355,3 @@ function VakansiyaDetailPage() {
     </div>
   )
 }
-
-export default VakansiyaDetailPage
