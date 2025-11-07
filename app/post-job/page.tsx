@@ -49,6 +49,7 @@ export default function PostJobPage() {
 
   // Date picker state for gundelik start date
   const [startDateType, setStartDateType] = useState<'today' | 'tomorrow' | 'custom'>('today')
+  const [customDateValue, setCustomDateValue] = useState('') // Raw value for date input
 
   // Format Azerbaijan phone number: +994 XX XXX XX XX
   const formatAzerbaijanPhone = (input: string): string => {
@@ -116,6 +117,7 @@ export default function PostJobPage() {
         year: 'numeric'
       })
       setGundelikForm(prev => ({ ...prev, startDate: formatted }))
+      setCustomDateValue(today.toISOString().split('T')[0])
     } else if (startDateType === 'tomorrow') {
       const tomorrow = new Date()
       tomorrow.setDate(tomorrow.getDate() + 1)
@@ -125,6 +127,13 @@ export default function PostJobPage() {
         year: 'numeric'
       })
       setGundelikForm(prev => ({ ...prev, startDate: formatted }))
+      setCustomDateValue(tomorrow.toISOString().split('T')[0])
+    } else if (startDateType === 'custom') {
+      // При переходе на custom, если нет даты - ставим сегодня
+      if (!customDateValue) {
+        const today = new Date()
+        setCustomDateValue(today.toISOString().split('T')[0])
+      }
     }
   }, [startDateType])
 
@@ -241,8 +250,8 @@ export default function PostJobPage() {
           setIsSubmitting(false)
           return
         }
-        if (!gundelikForm.salary || gundelikForm.salary.length < 3) {
-          toast.error('Ödəniş mütləqdir (minimum 3 simvol)')
+        if (!gundelikForm.salary || gundelikForm.salary.trim().length < 1) {
+          toast.error('Ödəniş mütləqdir')
           setIsSubmitting(false)
           return
         }
@@ -467,14 +476,19 @@ export default function PostJobPage() {
                   <label className="block text-sm font-semibold text-black mb-2">
                     Telefon <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="tel"
-                    value={vakansiyaForm.contactPhone}
-                    onChange={(e) => handleVakansiyaChange('contactPhone', e.target.value)}
-                    placeholder="+994 50 123 45 67"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
-                    required
-                  />
+                  <div className="relative">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none font-medium">
+                      +994
+                    </div>
+                    <input
+                      type="tel"
+                      value={vakansiyaForm.contactPhone.replace('+994', '').trim()}
+                      onChange={(e) => handleVakansiyaChange('contactPhone', '+994 ' + e.target.value)}
+                      placeholder="50 123 45 67"
+                      className="w-full pl-16 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
+                      required
+                    />
+                  </div>
                 </div>
               </>
             ) : (
@@ -584,8 +598,9 @@ export default function PostJobPage() {
                   {startDateType === 'custom' ? (
                     <input
                       type="date"
-                      value={gundelikForm.startDate ? new Date(gundelikForm.startDate).toISOString().split('T')[0] : ''}
+                      value={customDateValue}
                       onChange={(e) => {
+                        setCustomDateValue(e.target.value)
                         const date = new Date(e.target.value)
                         const formatted = date.toLocaleDateString('az-AZ', {
                           day: 'numeric',
@@ -630,14 +645,19 @@ export default function PostJobPage() {
                   <label className="block text-sm font-semibold text-black mb-2">
                     Telefon <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="tel"
-                    value={gundelikForm.phoneNumber}
-                    onChange={(e) => handleGundelikChange('phoneNumber', e.target.value)}
-                    placeholder="+994 50 123 45 67"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
-                    required
-                  />
+                  <div className="relative">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none font-medium">
+                      +994
+                    </div>
+                    <input
+                      type="tel"
+                      value={gundelikForm.phoneNumber.replace('+994', '').trim()}
+                      onChange={(e) => handleGundelikChange('phoneNumber', '+994 ' + e.target.value)}
+                      placeholder="50 123 45 67"
+                      className="w-full pl-16 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
+                      required
+                    />
+                  </div>
                   <p className="text-xs text-gray-500 mt-1">Telefon gizli olacaq</p>
                 </div>
               </>
