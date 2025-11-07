@@ -22,7 +22,7 @@ export interface ModerationLog {
  * Проверка админ роли
  */
 export async function isAdmin(): Promise<boolean> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return false
@@ -40,7 +40,7 @@ export async function isAdmin(): Promise<boolean> {
  * Получить все задания на модерации
  */
 export async function getPendingJobs() {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Проверка админа
   const admin = await isAdmin()
@@ -66,7 +66,7 @@ export async function getPendingJobs() {
  * Одобрить задание
  */
 export async function approveJob(jobId: string, reason?: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Проверка админа
   const admin = await isAdmin()
@@ -115,7 +115,7 @@ export async function approveJob(jobId: string, reason?: string) {
  * Отклонить задание
  */
 export async function rejectJob(jobId: string, reason: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Проверка админа
   const admin = await isAdmin()
@@ -164,7 +164,7 @@ export async function rejectJob(jobId: string, reason: string) {
  * Пометить как требующее внимания
  */
 export async function flagJob(jobId: string, reason: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const admin = await isAdmin()
   if (!admin) {
@@ -196,7 +196,7 @@ export async function flagJob(jobId: string, reason: string) {
  * Получить логи модерации для задания
  */
 export async function getModerationLogs(jobId: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const admin = await isAdmin()
   if (!admin) {
