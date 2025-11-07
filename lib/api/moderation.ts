@@ -1,9 +1,12 @@
 /**
- * Moderation API
- * Использует Supabase Server Actions для безопасной модерации
+ * Moderation API - Server Actions
+ * Использует Next.js 15 Server Actions для безопасной модерации
  */
 
+'use server'
+
 import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
 
 export interface ModerationLog {
   id: string
@@ -102,6 +105,9 @@ export async function approveJob(jobId: string, reason?: string) {
     console.error('Error creating moderation log:', logError)
   }
 
+  // Обновить кэш страницы
+  revalidatePath('/admin/moderation')
+
   return { success: true }
 }
 
@@ -147,6 +153,9 @@ export async function rejectJob(jobId: string, reason: string) {
   if (logError) {
     console.error('Error creating moderation log:', logError)
   }
+
+  // Обновить кэш страницы
+  revalidatePath('/admin/moderation')
 
   return { success: true }
 }
