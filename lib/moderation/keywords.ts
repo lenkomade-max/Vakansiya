@@ -58,6 +58,8 @@ export const fraudKeywordsAZ = [
   // Предоплата
   'əvvəlcədən ödəniş',
   'qeydiyyat haqqı',
+  'qeydiyyat üçün ödəniş',
+  'qeydiyyat üçün pul',
   'təlim haqqı',
   'sertifikat haqqı',
   'material haqqı',
@@ -66,17 +68,27 @@ export const fraudKeywordsAZ = [
   'pul köçür',
   'Western Union',
   'MoneyGram',
+  'ödəniş lazımdır',
+  'pul göndər',
 
   // Пирамиды
   'işçi yox, tərəfdaş axtarırıq',
   'yalnız komissiya',
   'satışdan faiz',
   'hər satışdan qazanc',
+  'dostlarını gətir',
+  'bonus alarsan',
+  'referal',
 
   // Нереальные обещания
   'günün 2 saatı',
   'heç nə etmə',
   'avtomatik gəlir',
+  'günə 200 AZN',
+  'günə 100 AZN',
+  'ilk ödəniş dərhal',
+  // УБРАЛ 'təcrübə lazım deyil' - может быть легитимная работа с обучением
+  // AI проверит контекст
 ];
 
 export const fraudKeywordsRU = [

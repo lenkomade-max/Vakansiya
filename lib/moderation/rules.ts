@@ -376,38 +376,30 @@ export async function moderateContent(
 
   score = Math.max(0, score);
 
-  // ===== НОВАЯ ЛОГИКА: Строгая модерация =====
+  // ===== КРИТИЧНАЯ ЛОГИКА: ВСЁ ЧЕРЕЗ AI! =====
 
   // Критические флаги, требующие авто-отклонения
   const autoRejectFlags = ['FRAUD_KEYWORDS', 'PROFANITY_DETECTED', 'PYRAMID_SCHEME'];
   const hasAutoRejectFlag = allFlags.some(f => autoRejectFlags.includes(f.type));
 
-  // Есть ли любые критические флаги
-  const hasCriticalFlags = allFlags.some(f => f.severity === 'critical');
-
-  // Есть ли проблемы средней или высокой тяжести
-  const hasMediumOrHighFlags = allFlags.some(f => f.severity === 'high' || f.severity === 'medium');
-
   // Решение о модерации:
-  // 1. score >= 90 и НЕТ ВООБЩЕ флагов → AUTO APPROVE (только идеальные)
-  // 2. score < 40 ИЛИ есть флаги мошенничества/мата → AUTO REJECT
-  // 3. score 40-90 ИЛИ есть любые флаги → ОБЯЗАТЕЛЬНАЯ AI REVIEW
+  // 1. score < 40 ИЛИ есть флаги мошенничества/мата → AUTO REJECT
+  // 2. ВСЁ ОСТАЛЬНОЕ → ОБЯЗАТЕЛЬНАЯ AI REVIEW
   //    - AI с высокой уверенностью (0.9+) → авто-решение
   //    - AI с низкой уверенностью → manual review
+
+  // ❌ УБРАЛ AUTO APPROVE без AI - keywords могут не поймать скам!
 
   let approved = false;
   let autoReject = false;
   let needsAIReview = false;
 
   if (hasAutoRejectFlag || score < 40) {
-    // AUTO REJECT: мошенничество, мат, очень низкий score
+    // AUTO REJECT: явное мошенничество, мат, очень низкий score
     autoReject = true;
-  } else if (score >= 90 && allFlags.length === 0) {
-    // AUTO APPROVE: только ИДЕАЛЬНЫЕ объявления (score 90+ и 0 флагов)
-    approved = true;
   } else {
-    // AI REVIEW: ВСЕ остальные случаи - отправляем на AI
-    // Это включает score 40-90 или любые объявления с флагами
+    // ВСЁ ОСТАЛЬНОЕ → AI REVIEW (даже если score 100!)
+    // AI должен проверить ВЕСЬ текст, keywords могут не поймать скам
     needsAIReview = true;
   }
 
