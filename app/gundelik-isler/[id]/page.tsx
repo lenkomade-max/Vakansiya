@@ -105,7 +105,7 @@ export default function ShortJobDetailPage() {
     }
   }
 
-  const categoryConfig = CATEGORIES.find(c => c.id === job.category)
+  const categoryConfig = CATEGORIES.find(c => c.id === job.category as ShortJobCategory)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -131,7 +131,7 @@ export default function ShortJobDetailPage() {
         <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
           {/* Header with Category Icon */}
           <div className="relative bg-gray-50 p-8 flex items-center justify-center border-b border-gray-200">
-            <CategoryIcon category={job.category} size="xl" showBackground={true} />
+            <CategoryIcon category={job.category as ShortJobCategory} size="xl" showBackground={true} />
 
             {/* Badges */}
             <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2">
