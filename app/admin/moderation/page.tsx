@@ -270,6 +270,106 @@ export default function AdminModerationPage() {
                           {selectedJob.contact_phone}
                         </p>
                       </div>
+
+                      {/* AI Moderation Results */}
+                      {(selectedJob as any).ai_moderation_result && (
+                        <div className="border-t border-gray-200 pt-4">
+                          <p className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+                            <span>🤖</span>
+                            AI Moderasiya
+                          </p>
+                          {(() => {
+                            const ai = (selectedJob as any).ai_moderation_result
+                            return (
+                              <div className="space-y-2 text-xs">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className={`px-2 py-1 rounded font-bold ${
+                                    ai.approved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                  }`}>
+                                    {ai.approved ? '✓ Təsdiq' : '✗ Rədd'}
+                                  </span>
+                                  <span className="text-gray-600">
+                                    Əminlik: {(ai.confidence * 100).toFixed(0)}%
+                                  </span>
+                                </div>
+                                <div className="bg-gray-50 p-2 rounded">
+                                  <p className="text-gray-700">
+                                    <strong>Səbəb:</strong> {ai.reason}
+                                  </p>
+                                </div>
+                                {ai.violations && ai.violations.length > 0 && (
+                                  <div>
+                                    <strong className="text-red-600">Pozuntular:</strong>
+                                    <ul className="list-disc list-inside text-gray-700 ml-2 mt-1">
+                                      {ai.violations.map((v: string, i: number) => (
+                                        <li key={i}>{v}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                                <p className="text-gray-600">
+                                  <strong>Tövsiyə:</strong> {
+                                    ai.recommendation === 'approve' ? '✓ Təsdiq et' :
+                                    ai.recommendation === 'reject' ? '✗ Rədd et' :
+                                    '⚠ Əl ilə yoxla'
+                                  }
+                                </p>
+                              </div>
+                            )
+                          })()}
+                        </div>
+                      )}
+
+                      {/* Rules Moderation Results */}
+                      {(selectedJob as any).rules_moderation_result && (
+                        <div className="border-t border-gray-200 pt-4">
+                          <p className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+                            <span>📋</span>
+                            Qaydalar Yoxlaması
+                          </p>
+                          {(() => {
+                            const rules = (selectedJob as any).rules_moderation_result
+                            return (
+                              <div className="space-y-2 text-xs">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className={`px-2 py-1 rounded font-bold ${
+                                    rules.approved ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                                  }`}>
+                                    Xal: {rules.score}/100
+                                  </span>
+                                  {rules.language && (
+                                    <span className="text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                                      Dil: {rules.language.toUpperCase()}
+                                    </span>
+                                  )}
+                                </div>
+                                {rules.flags && rules.flags.length > 0 && (
+                                  <div>
+                                    <strong className="text-gray-800">Problemlər ({rules.flags.length}):</strong>
+                                    <ul className="space-y-1 mt-1">
+                                      {rules.flags.map((flag: any, i: number) => (
+                                        <li key={i} className="bg-gray-50 p-2 rounded">
+                                          <div className="flex items-start gap-2">
+                                            <span className={`px-1.5 py-0.5 rounded text-xs font-bold whitespace-nowrap ${
+                                              flag.severity === 'critical' ? 'bg-red-500 text-white' :
+                                              flag.severity === 'high' ? 'bg-orange-500 text-white' :
+                                              flag.severity === 'medium' ? 'bg-yellow-500 text-white' :
+                                              'bg-gray-300 text-gray-700'
+                                            }`}>
+                                              {flag.severity}
+                                            </span>
+                                            <span className="text-gray-700 text-xs">{flag.message}</span>
+                                          </div>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          })()}
+                        </div>
+                      )}
                     </div>
 
                     {/* Moderation Actions */}

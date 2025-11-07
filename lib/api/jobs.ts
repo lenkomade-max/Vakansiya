@@ -80,6 +80,7 @@ export async function createJob(
   console.log('[createJob] Moderation result:', moderationResult)
 
   let finalStatus: 'pending_review' | 'active' | 'rejected' = 'pending_review'
+  let aiResult: any = null
 
   // If rules found issues, send to manual review
   if (!moderationResult.approved || moderationResult.flags.length > 0) {
@@ -88,7 +89,7 @@ export async function createJob(
   } else {
     // No rule violations, check with AI
     try {
-      const aiResult = await aiModerationWithFallback(jobPost, moderationResult.flags)
+      aiResult = await aiModerationWithFallback(jobPost, moderationResult.flags)
 
       console.log('AI moderation result:', aiResult)
 
@@ -114,7 +115,7 @@ export async function createJob(
     }
   }
 
-  // Insert job with determined status
+  // Insert job with determined status AND moderation results
   console.log('[createJob] Inserting job with status:', finalStatus)
 
   const { data, error } = await supabase
@@ -123,6 +124,9 @@ export async function createJob(
       user_id: userId,
       ...jobData,
       status: finalStatus,
+      rules_moderation_result: moderationResult,
+      ai_moderation_result: aiResult,
+      ai_checked_at: aiResult ? new Date().toISOString() : null,
     })
     .select('id')
     .single()
