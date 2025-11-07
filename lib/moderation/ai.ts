@@ -71,39 +71,67 @@ Respond in JSON format ONLY:
 
   try {
     console.log('[AI Moderation] Sending request to OpenRouter...')
-    console.log('[AI Moderation] Model: meta-llama/llama-3.3-70b-instruct:free')
+    console.log('[AI Moderation] Model: deepseek/deepseek-r1:free')
+    console.log('[AI Moderation] API Key (first 10 chars):', apiKey.substring(0, 10) + '...')
+    console.log('[AI Moderation] Prompt length:', prompt.length)
+
+    // Формируем headers правильно
+    const headers: Record<string, string> = {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    };
+
+    // Добавляем опциональные headers только если есть значения
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    if (siteUrl) {
+      headers['HTTP-Referer'] = siteUrl;
+    }
+    headers['X-Title'] = 'Vakansiya.az';
+
+    console.log('[AI Moderation] Request headers:', Object.keys(headers));
+
+    const requestBody = {
+      model: 'deepseek/deepseek-r1:free',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a content moderator for a job portal. Respond only with valid JSON.',
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      temperature: 0.3,
+      max_tokens: 500,
+    };
+
+    console.log('[AI Moderation] Request body:', JSON.stringify(requestBody, null, 2));
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
-        'X-Title': 'Vakansiya.az Content Moderation',
-      },
-      body: JSON.stringify({
-        model: 'meta-llama/llama-3.3-70b-instruct:free', // Бесплатная модель
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a content moderator for a job portal. Respond only with valid JSON.',
-          },
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        temperature: 0.3, // Низкая температура для консистентности
-        max_tokens: 500,
-      }),
+      headers,
+      body: JSON.stringify(requestBody),
     });
 
     console.log('[AI Moderation] Response status:', response.status)
     console.log('[AI Moderation] Response ok:', response.ok)
+    console.log('[AI Moderation] Response headers:', Object.fromEntries(response.headers.entries()))
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[AI Moderation] OpenRouter API error:', response.status, errorText);
+      console.error('[AI Moderation] ❌ OpenRouter API ERROR');
+      console.error('[AI Moderation] Status:', response.status);
+      console.error('[AI Moderation] Status Text:', response.statusText);
+      console.error('[AI Moderation] Error Body:', errorText);
+
+      // Пытаемся распарсить JSON error
+      try {
+        const errorJson = JSON.parse(errorText);
+        console.error('[AI Moderation] Parsed Error:', JSON.stringify(errorJson, null, 2));
+      } catch (e) {
+        console.error('[AI Moderation] Could not parse error as JSON');
+      }
 
       // Если лимит исчерпан, отправляем на ручную проверку
       if (response.status === 429) {
@@ -184,19 +212,26 @@ export async function aiModerationReviewFallback(
   }
 
   try {
-    console.log('[AI Moderation Fallback] Using model: qwen/qwq-32b:free')
+    console.log('[AI Moderation Fallback] Using model: deepseek/deepseek-chat-v3.1:free')
 
-    // Используем Qwen QwQ 32B как fallback
+    // Формируем headers
+    const headers: Record<string, string> = {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    };
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    if (siteUrl) {
+      headers['HTTP-Referer'] = siteUrl;
+    }
+    headers['X-Title'] = 'Vakansiya.az';
+
+    // Используем DeepSeek Chat V3.1 как fallback
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
-        'X-Title': 'Vakansiya.az Content Moderation',
-      },
+      headers,
       body: JSON.stringify({
-        model: 'qwen/qwq-32b:free', // Fallback модель
+        model: 'deepseek/deepseek-chat-v3.1:free', // Fallback модель
         messages: [
           {
             role: 'system',
