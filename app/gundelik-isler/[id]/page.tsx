@@ -66,23 +66,6 @@ export default function ShortJobDetailPage() {
     router.back()
   }
 
-  // Helper to format date
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-    if (diffHours < 24) {
-      return `${diffHours} saat əvvəl`
-    } else if (diffDays < 7) {
-      return `${diffDays} gün əvvəl`
-    } else {
-      return date.toLocaleDateString('az-AZ')
-    }
-  }
-
   // Loading state
   if (loading) {
     return (
@@ -103,6 +86,23 @@ export default function ShortJobDetailPage() {
   // Job not found
   if (!job) {
     return null
+  }
+
+  // Helper to format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+    if (diffHours < 24) {
+      return `${diffHours} saat əvvəl`
+    } else if (diffDays < 7) {
+      return `${diffDays} gün əvvəl`
+    } else {
+      return date.toLocaleDateString('az-AZ')
+    }
   }
 
   const categoryConfig = CATEGORIES.find(c => c.id === job.category)
