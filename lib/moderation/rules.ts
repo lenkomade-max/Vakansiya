@@ -379,7 +379,8 @@ export async function moderateContent(
   // ===== КРИТИЧНАЯ ЛОГИКА: ВСЁ ЧЕРЕЗ AI! =====
 
   // Критические флаги, требующие авто-отклонения
-  const autoRejectFlags = ['FRAUD_KEYWORDS', 'PROFANITY_DETECTED', 'PYRAMID_SCHEME'];
+  // PROFANITY_DETECTED УБРАН - пусть AI проверяет контекст (может быть false positive)
+  const autoRejectFlags = ['FRAUD_KEYWORDS', 'PYRAMID_SCHEME'];
   const hasAutoRejectFlag = allFlags.some(f => autoRejectFlags.includes(f.type));
 
   // Решение о модерации:

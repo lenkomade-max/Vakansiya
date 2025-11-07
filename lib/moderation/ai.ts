@@ -46,7 +46,11 @@ Analyze this job posting for:
 2. Pyramid schemes or MLM scams
 3. Prepayment scams (asking money upfront before hiring)
 4. Unrealistic promises or salary
-5. Inappropriate or offensive content
+5. **Profanity and offensive language** (Azerbaijani and Russian):
+   - Check for mat (матерные слова) in context
+   - Distinguish between legitimate words and profanity (e.g., "IT" vs mat)
+   - Flag only clear offensive language, not abbreviations or technical terms
+6. Inappropriate or offensive content
 
 Job Posting:
 ---
@@ -59,6 +63,11 @@ ${jobPost.location ? `Location: ${jobPost.location}` : ''}
 
 Our rules-based system detected these issues:
 ${rulesFlags.length > 0 ? JSON.stringify(rulesFlags, null, 2) : 'No issues detected'}
+
+**IMPORTANT:**
+- Analyze the FULL context, not just keywords
+- If profanity is detected by rules but seems like false positive (e.g., "IT" in job title), set approved=true
+- Focus on REAL scams and offensive content, not technical terms
 
 Respond in JSON format ONLY:
 {
