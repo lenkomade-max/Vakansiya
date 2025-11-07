@@ -71,7 +71,7 @@ Respond in JSON format ONLY:
 
   try {
     console.log('[AI Moderation] Sending request to OpenRouter...')
-    console.log('[AI Moderation] Model: deepseek/deepseek-r1:free')
+    console.log('[AI Moderation] Model: deepseek/deepseek-r1 (PAID - reasoning model)')
     console.log('[AI Moderation] API Key (first 10 chars):', apiKey.substring(0, 10) + '...')
     console.log('[AI Moderation] Prompt length:', prompt.length)
 
@@ -91,7 +91,7 @@ Respond in JSON format ONLY:
     console.log('[AI Moderation] Request headers:', Object.keys(headers));
 
     const requestBody = {
-      model: 'deepseek/deepseek-r1:free',
+      model: 'deepseek/deepseek-r1', // ПЛАТНАЯ модель с reasoning
       messages: [
         {
           role: 'system',
@@ -166,8 +166,18 @@ Respond in JSON format ONLY:
     console.log('[AI Moderation] AI response content:', content)
 
     // Парсим JSON ответ
+    // DeepSeek оборачивает JSON в ```json ... ```, надо извлечь
     try {
-      const result: AIReviewResult = JSON.parse(content);
+      let jsonText = content;
+
+      // Проверяем есть ли markdown wrapper
+      const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+      if (jsonMatch) {
+        jsonText = jsonMatch[1];
+        console.log('[AI Moderation] Extracted JSON from markdown wrapper');
+      }
+
+      const result: AIReviewResult = JSON.parse(jsonText);
       console.log('[AI Moderation] Parsed result:', result)
       return result;
     } catch (parseError) {
@@ -212,7 +222,7 @@ export async function aiModerationReviewFallback(
   }
 
   try {
-    console.log('[AI Moderation Fallback] Using model: deepseek/deepseek-chat-v3.1:free')
+    console.log('[AI Moderation Fallback] Using model: deepseek/deepseek-chat (PAID - fast model)')
 
     // Формируем headers
     const headers: Record<string, string> = {
@@ -226,12 +236,12 @@ export async function aiModerationReviewFallback(
     }
     headers['X-Title'] = 'Vakansiya.az';
 
-    // Используем DeepSeek Chat V3.1 как fallback
+    // Используем DeepSeek Chat как fallback (быстрее чем R1)
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers,
       body: JSON.stringify({
-        model: 'deepseek/deepseek-chat-v3.1:free', // Fallback модель
+        model: 'deepseek/deepseek-chat', // ПЛАТНАЯ fallback модель
         messages: [
           {
             role: 'system',
@@ -272,7 +282,16 @@ export async function aiModerationReviewFallback(
     console.log('[AI Moderation Fallback] Content:', content)
 
     try {
-      const result: AIReviewResult = JSON.parse(content);
+      let jsonText = content;
+
+      // DeepSeek может оборачивать в markdown
+      const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+      if (jsonMatch) {
+        jsonText = jsonMatch[1];
+        console.log('[AI Moderation Fallback] Extracted JSON from markdown wrapper');
+      }
+
+      const result: AIReviewResult = JSON.parse(jsonText);
       console.log('[AI Moderation Fallback] Parsed result:', result)
       return result;
     } catch (parseError) {
