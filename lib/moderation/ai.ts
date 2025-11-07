@@ -11,6 +11,9 @@ export type AIReviewResult = {
   reason: string;
   violations: string[];
   recommendation: 'approve' | 'reject' | 'manual_review';
+  // AI улучшения объявления
+  suggestedTitle?: string; // Исправленное название (если оригинал плохой)
+  jobType?: 'vakansiya' | 'gundelik'; // Определенный тип работы
 };
 
 /**
@@ -64,10 +67,26 @@ ${jobPost.location ? `Location: ${jobPost.location}` : ''}
 Our rules-based system detected these issues:
 ${rulesFlags.length > 0 ? JSON.stringify(rulesFlags, null, 2) : 'No issues detected'}
 
+**ADDITIONAL TASKS:**
+
+1. **Fix Job Title** (if needed):
+   - If title is unclear, generic, or nonsense ("iş", "vakansiya", "+++", etc.)
+   - Generate a clear, professional title from the description
+   - Use Azerbaijani language
+   - Examples: "Frontend Developer", "Satış meneceri", "Ofis işçisi"
+
+2. **Determine Job Type**:
+   - "vakansiya" = full-time/permanent position with monthly salary
+   - "gundelik" = short-term/gig work with daily/hourly pay
+   - Analyze description context to decide
+   - Indicators for "gundelik": daily pay, one-time task, temporary work, "günlük", "həftəlik"
+   - Indicators for "vakansiya": monthly salary, permanent position, career growth, benefits
+
 **IMPORTANT:**
 - Analyze the FULL context, not just keywords
 - If profanity is detected by rules but seems like false positive (e.g., "IT" in job title), set approved=true
 - Focus on REAL scams and offensive content, not technical terms
+- ALWAYS provide suggestedTitle and jobType, even if original is good
 
 Respond in JSON format ONLY:
 {
@@ -75,7 +94,9 @@ Respond in JSON format ONLY:
   "confidence": 0.0-1.0,
   "reason": "brief explanation in English",
   "violations": ["list", "of", "violations"],
-  "recommendation": "approve" | "reject" | "manual_review"
+  "recommendation": "approve" | "reject" | "manual_review",
+  "suggestedTitle": "Professional job title in Azerbaijani",
+  "jobType": "vakansiya" | "gundelik"
 }`;
 
   try {

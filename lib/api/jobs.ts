@@ -115,6 +115,25 @@ export async function createJob(
       aiResult = await aiModerationWithFallback(jobPost, moderationResult.flags)
       console.log('[createJob] AI result:', aiResult)
 
+      // Применяем AI улучшения (если есть)
+      if (aiResult.suggestedTitle && aiResult.suggestedTitle.trim()) {
+        console.log('[createJob] AI suggested better title:', aiResult.suggestedTitle)
+        console.log('[createJob] Original title:', jobData.title)
+        // Заменяем название на предложенное AI
+        jobData.title = aiResult.suggestedTitle.trim()
+        jobPost.title = aiResult.suggestedTitle.trim()
+      }
+
+      if (aiResult.jobType) {
+        console.log('[createJob] AI determined job type:', aiResult.jobType)
+        console.log('[createJob] Original job type:', jobData.job_type)
+        // Исправляем тип работы если AI определил другой
+        if (aiResult.jobType !== jobData.job_type) {
+          console.log('[createJob] Correcting job type from', jobData.job_type, 'to', aiResult.jobType)
+          jobData.job_type = aiResult.jobType
+        }
+      }
+
       // AI approved with confidence >= 0.9 → auto approve
       if (aiResult.approved && aiResult.confidence >= 0.9) {
         console.log('[createJob] AUTO APPROVE by AI (confidence:', aiResult.confidence, ')')

@@ -116,16 +116,28 @@ export async function GET() {
           }
         }
 
-        // Обновляем объявление в БД
+        // Обновляем объявление в БД (с AI улучшениями если есть)
+        const updateData: any = {
+          status: finalStatus,
+          rules_moderation_result: moderationResult,
+          ai_moderation_result: aiResult,
+          ai_checked_at: aiResult ? new Date().toISOString() : null,
+          updated_at: new Date().toISOString(),
+        };
+
+        // Применяем AI улучшения (title, job_type)
+        if (aiResult) {
+          if (aiResult.suggestedTitle && aiResult.suggestedTitle.trim()) {
+            updateData.title = aiResult.suggestedTitle.trim();
+          }
+          if (aiResult.jobType && aiResult.jobType !== job.job_type) {
+            updateData.job_type = aiResult.jobType;
+          }
+        }
+
         const { error: updateError } = await supabase
           .from('jobs')
-          .update({
-            status: finalStatus,
-            rules_moderation_result: moderationResult,
-            ai_moderation_result: aiResult,
-            ai_checked_at: aiResult ? new Date().toISOString() : null,
-            updated_at: new Date().toISOString(),
-          })
+          .update(updateData)
           .eq('id', job.id);
 
         if (updateError) {
