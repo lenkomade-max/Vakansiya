@@ -79,8 +79,39 @@ export default function PostJobPage() {
 
     try {
       if (jobType === 'vakansiya') {
-        if (!vakansiyaForm.title || !vakansiyaForm.company || !vakansiyaForm.category || !vakansiyaForm.location) {
-          toast.error('Zəhmət olmasa bütün mütləq sahələri doldurun')
+        // Валидация VAKANSIYA (строгая)
+        if (!vakansiyaForm.title?.trim()) {
+          toast.error('Vakansiya adı mütləqdir')
+          setIsSubmitting(false)
+          return
+        }
+        if (!vakansiyaForm.company?.trim()) {
+          toast.error('Şirkət adı mütləqdir')
+          setIsSubmitting(false)
+          return
+        }
+        if (!vakansiyaForm.category) {
+          toast.error('Kateqoriya seçin')
+          setIsSubmitting(false)
+          return
+        }
+        if (!vakansiyaForm.location) {
+          toast.error('Şəhər seçin')
+          setIsSubmitting(false)
+          return
+        }
+        if (!vakansiyaForm.salary || vakansiyaForm.salary.length < 3) {
+          toast.error('Əmək haqqı mütləqdir (minimum 3 simvol)')
+          setIsSubmitting(false)
+          return
+        }
+        if (!vakansiyaForm.employmentType) {
+          toast.error('İş rejimi seçin')
+          setIsSubmitting(false)
+          return
+        }
+        if (!vakansiyaForm.description || vakansiyaForm.description.trim().length < 50) {
+          toast.error('Təsvir mütləqdir və minimum 50 simvol olmalıdır')
           setIsSubmitting(false)
           return
         }
@@ -124,8 +155,39 @@ export default function PostJobPage() {
         }
 
       } else {
-        if (!gundelikForm.title || !gundelikForm.category || !gundelikForm.location || !gundelikForm.salary || !gundelikForm.phoneNumber) {
-          toast.error('Zəhmət olmasa bütün mütləq sahələri doldurun')
+        // Валидация GÜNDƏLIK (строгая)
+        if (!gundelikForm.title?.trim()) {
+          toast.error('İş adı mütləqdir')
+          setIsSubmitting(false)
+          return
+        }
+        if (!gundelikForm.category) {
+          toast.error('Kateqoriya seçin')
+          setIsSubmitting(false)
+          return
+        }
+        if (!gundelikForm.location) {
+          toast.error('Şəhər seçin')
+          setIsSubmitting(false)
+          return
+        }
+        if (!gundelikForm.salary || gundelikForm.salary.length < 3) {
+          toast.error('Ödəniş mütləqdir (minimum 3 simvol)')
+          setIsSubmitting(false)
+          return
+        }
+        if (!gundelikForm.description || gundelikForm.description.trim().length < 20) {
+          toast.error('Təsvir mütləqdir və minimum 20 simvol olmalıdır')
+          setIsSubmitting(false)
+          return
+        }
+        if (!gundelikForm.phoneNumber || gundelikForm.phoneNumber.length < 9) {
+          toast.error('Telefon nömrəsi mütləqdir')
+          setIsSubmitting(false)
+          return
+        }
+        if (!gundelikForm.startDate) {
+          toast.error('İşin başlama tarixi mütləqdir')
           setIsSubmitting(false)
           return
         }
