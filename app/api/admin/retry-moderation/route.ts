@@ -1,9 +1,9 @@
 /**
  * API endpoint для повторной модерации объявлений
- * Находит все pending_moderation объявления и запускает AI модерацию
+ * Находит все pending_moderation И pending_review объявления и запускает AI модерацию
  *
  * Используется:
- * 1. Vercel Cron Job (автоматически каждый час)
+ * 1. Vercel Cron Job (автоматически каждую ночь)
  * 2. Кнопка в админ панели (вручную)
  */
 
@@ -22,11 +22,11 @@ export async function GET() {
   try {
     const supabase = await createClient();
 
-    // 1. Найти все объявления со статусом 'pending_moderation'
+    // 1. Найти все объявления со статусом 'pending_moderation' ИЛИ 'pending_review'
     const { data: pendingJobs, error } = await supabase
       .from('jobs')
       .select('*')
-      .eq('status', 'pending_moderation')
+      .in('status', ['pending_moderation', 'pending_review'])
       .order('created_at', { ascending: true })
       .limit(50); // Обрабатываем максимум 50 за раз
 

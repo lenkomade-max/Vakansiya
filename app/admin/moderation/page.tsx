@@ -104,7 +104,7 @@ export default function AdminModerationPage() {
   }
 
   const handleRetryModeration = async () => {
-    if (!confirm('Bütün gözləyən elanları yenidən yoxlamaq istəyirsiniz?')) {
+    if (!confirm('Bütün gözləyən və növbədə olan elanları AI ilə yenidən yoxlamaq istəyirsiniz?')) {
       return
     }
 
@@ -117,7 +117,12 @@ export default function AdminModerationPage() {
 
       if (data.success) {
         setRetryResult(data)
-        alert(`✅ Uğurla tamamlandı!\n\nİşləndi: ${data.results?.total || 0}\nTəsdiqləndi: ${data.results?.approved || 0}\nRədd edildi: ${data.results?.rejected || 0}\nYoxlanılır: ${data.results?.pending_review || 0}`)
+
+        if (data.results?.total === 0) {
+          alert('✅ Yoxlanılacaq elan tapılmadı')
+        } else {
+          alert(`✅ Uğurla tamamlandı!\n\n📊 Nəticələr:\nİşləndi: ${data.results?.total || 0}\n✅ Təsdiqləndi: ${data.results?.approved || 0}\n❌ Rədd edildi: ${data.results?.rejected || 0}\n⏳ Əl ilə yoxlanılmalı: ${data.results?.pending_review || 0}\n❗ Uğursuz: ${data.results?.failed || 0}`)
+        }
 
         // Yenilə
         await loadJobs()
