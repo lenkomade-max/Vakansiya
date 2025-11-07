@@ -63,6 +63,38 @@ export async function getPendingJobs() {
 }
 
 /**
+ * Получить ВСЕ задания (для админ панели) с фильтром по статусу
+ */
+export async function getAllJobs(statusFilter?: 'all' | 'active' | 'pending_review' | 'rejected') {
+  const supabase = await createClient()
+
+  // Проверка админа
+  const admin = await isAdmin()
+  if (!admin) {
+    throw new Error('Access denied: Admin only')
+  }
+
+  let query = supabase
+    .from('jobs')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  // Применить фильтр если указан
+  if (statusFilter && statusFilter !== 'all') {
+    query = query.eq('status', statusFilter)
+  }
+
+  const { data, error } = await query
+
+  if (error) {
+    console.error('Error fetching all jobs:', error)
+    throw error
+  }
+
+  return data
+}
+
+/**
  * Одобрить задание
  */
 export async function approveJob(jobId: string, reason?: string) {

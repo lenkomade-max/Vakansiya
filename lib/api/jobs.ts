@@ -91,9 +91,14 @@ export async function createJob(
   if (moderationResult.autoReject) {
     console.log('[createJob] AUTO REJECT by rules:', moderationResult.flags)
     finalStatus = 'rejected'
+
+    // Формируем детальное сообщение с причинами
+    const criticalFlags = moderationResult.flags.filter(f => f.severity === 'critical' || f.severity === 'high')
+    const reasons = criticalFlags.map(f => f.message).join('\n- ')
+
     return {
       success: false,
-      error: 'Elan avtomatik olaraq rədd edildi (qaydalara uyğun deyil)'
+      error: `Elan rədd edildi:\n\nSəbəblər:\n- ${reasons}\n\nZəhmət olmasa, elanınızı yoxlayın və düzgün məlumat daxil edin.`
     }
   }
 
@@ -110,21 +115,27 @@ export async function createJob(
       aiResult = await aiModerationWithFallback(jobPost, moderationResult.flags)
       console.log('[createJob] AI result:', aiResult)
 
-      // AI approved with confidence >= 0.85 → auto approve
-      if (aiResult.approved && aiResult.confidence >= 0.85) {
+      // AI approved with confidence >= 0.9 → auto approve
+      if (aiResult.approved && aiResult.confidence >= 0.9) {
         console.log('[createJob] AUTO APPROVE by AI (confidence:', aiResult.confidence, ')')
         finalStatus = 'active'
       }
-      // AI rejected with confidence >= 0.85 → auto reject
-      else if (!aiResult.approved && aiResult.confidence >= 0.85 && aiResult.recommendation === 'reject') {
+      // AI rejected with confidence >= 0.9 → auto reject
+      else if (!aiResult.approved && aiResult.confidence >= 0.9 && aiResult.recommendation === 'reject') {
         console.log('[createJob] AUTO REJECT by AI (confidence:', aiResult.confidence, ')')
         finalStatus = 'rejected'
+
+        // Детальная причина для пользователя
+        const rejectionReason = aiResult.violations && aiResult.violations.length > 0
+          ? `${aiResult.reason}\n\nAşkar edilən problemlər:\n- ${aiResult.violations.join('\n- ')}`
+          : aiResult.reason;
+
         return {
           success: false,
-          error: `Elan avtomatik olaraq rədd edildi: ${aiResult.reason}`
+          error: `Elan rədd edildi:\n${rejectionReason}`
         }
       }
-      // Low confidence (< 0.85) → manual review
+      // Low confidence (< 0.9) → manual review
       else {
         console.log('[createJob] MANUAL REVIEW (AI confidence too low:', aiResult.confidence, ')')
         finalStatus = 'pending_review'

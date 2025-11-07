@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Navigation from '@/components/ui/Navigation'
-import { getPendingJobs, approveJob, rejectJob, isAdmin } from '@/lib/api/moderation'
+import { getPendingJobs, getAllJobs, approveJob, rejectJob, isAdmin } from '@/lib/api/moderation'
 import { Job } from '@/lib/api/jobs'
 import {
   CheckCircleIcon,
@@ -23,10 +23,18 @@ export default function AdminModerationPage() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null)
   const [rejectReason, setRejectReason] = useState('')
   const [processing, setProcessing] = useState(false)
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending_review' | 'rejected'>('all')
 
   useEffect(() => {
     checkAdminAndLoadJobs()
   }, [])
+
+  // Перезагрузить при изменении фильтра
+  useEffect(() => {
+    if (isAdminUser) {
+      loadJobs()
+    }
+  }, [statusFilter, isAdminUser])
 
   const checkAdminAndLoadJobs = async () => {
     setLoading(true)
@@ -41,14 +49,17 @@ export default function AdminModerationPage() {
 
     setIsAdminUser(true)
 
-    // Загрузить задания на модерации
+    // Загрузить задания
+    await loadJobs()
+    setLoading(false)
+  }
+
+  const loadJobs = async () => {
     try {
-      const pendingJobs = await getPendingJobs()
-      setJobs(pendingJobs)
+      const allJobs = await getAllJobs(statusFilter)
+      setJobs(allJobs)
     } catch (error) {
-      console.error('Error loading pending jobs:', error)
-    } finally {
-      setLoading(false)
+      console.error('Error loading jobs:', error)
     }
   }
 
@@ -133,14 +144,58 @@ export default function AdminModerationPage() {
 
       <div className="container mx-auto px-4 max-w-7xl py-10">
         {/* Header */}
-        <div className="bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl p-8 mb-8 text-white">
+        <div className="bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl p-8 mb-6 text-white">
           <div className="flex items-center gap-3 mb-2">
             <ExclamationTriangleIcon className="w-8 h-8" />
             <h1 className="text-3xl font-bold">Admin Moderasiya Paneli</h1>
           </div>
           <p className="text-white/90">
-            {jobs.length} elan yoxlanılmağı gözləyir
+            {jobs.length} elan tapıldı
           </p>
+        </div>
+
+        {/* Status Filters */}
+        <div className="flex gap-2 mb-6 flex-wrap">
+          <button
+            onClick={() => setStatusFilter('all')}
+            className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+              statusFilter === 'all'
+                ? 'bg-black text-white'
+                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            🔄 Hamısı ({jobs.length})
+          </button>
+          <button
+            onClick={() => setStatusFilter('active')}
+            className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+              statusFilter === 'active'
+                ? 'bg-green-600 text-white'
+                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            ✅ Aktiv
+          </button>
+          <button
+            onClick={() => setStatusFilter('pending_review')}
+            className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+              statusFilter === 'pending_review'
+                ? 'bg-yellow-600 text-white'
+                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            ⏳ Gözləyir
+          </button>
+          <button
+            onClick={() => setStatusFilter('rejected')}
+            className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+              statusFilter === 'rejected'
+                ? 'bg-red-600 text-white'
+                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            ❌ Rədd edilib
+          </button>
         </div>
 
         {jobs.length === 0 ? (
@@ -183,6 +238,18 @@ export default function AdminModerationPage() {
                         )}
                         <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
                           {job.category}
+                        </span>
+                        {/* Status Badge */}
+                        <span className={`px-2 py-1 text-xs font-bold rounded ${
+                          job.status === 'active' ? 'bg-green-100 text-green-800' :
+                          job.status === 'pending_review' ? 'bg-yellow-100 text-yellow-800' :
+                          job.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {job.status === 'active' ? '✓ Aktiv' :
+                           job.status === 'pending_review' ? '⏳ Gözləyir' :
+                           job.status === 'rejected' ? '✗ Rədd' :
+                           job.status}
                         </span>
                       </div>
                       <h3 className="text-lg font-bold text-black mb-2">

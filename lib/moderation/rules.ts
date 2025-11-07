@@ -376,7 +376,7 @@ export async function moderateContent(
 
   score = Math.max(0, score);
 
-  // ===== НОВАЯ ЛОГИКА: 90% авто-решений, 10% manual review =====
+  // ===== НОВАЯ ЛОГИКА: Строгая модерация =====
 
   // Критические флаги, требующие авто-отклонения
   const autoRejectFlags = ['FRAUD_KEYWORDS', 'PROFANITY_DETECTED', 'PYRAMID_SCHEME'];
@@ -385,25 +385,29 @@ export async function moderateContent(
   // Есть ли любые критические флаги
   const hasCriticalFlags = allFlags.some(f => f.severity === 'critical');
 
+  // Есть ли проблемы средней или высокой тяжести
+  const hasMediumOrHighFlags = allFlags.some(f => f.severity === 'high' || f.severity === 'medium');
+
   // Решение о модерации:
-  // 1. score >= 75 и нет критических → AUTO APPROVE (60-70% случаев)
-  // 2. score < 30 ИЛИ есть флаги мошенничества/мата → AUTO REJECT (10-20% случаев)
-  // 3. score 30-75 и нет авто-отклонения → AI REVIEW (15-25% случаев)
-  //    - AI с высокой уверенностью → авто-решение
-  //    - AI с низкой уверенностью → manual review (~10% от всех)
+  // 1. score >= 90 и НЕТ ВООБЩЕ флагов → AUTO APPROVE (только идеальные)
+  // 2. score < 40 ИЛИ есть флаги мошенничества/мата → AUTO REJECT
+  // 3. score 40-90 ИЛИ есть любые флаги → ОБЯЗАТЕЛЬНАЯ AI REVIEW
+  //    - AI с высокой уверенностью (0.9+) → авто-решение
+  //    - AI с низкой уверенностью → manual review
 
   let approved = false;
   let autoReject = false;
   let needsAIReview = false;
 
-  if (hasAutoRejectFlag || score < 30) {
+  if (hasAutoRejectFlag || score < 40) {
     // AUTO REJECT: мошенничество, мат, очень низкий score
     autoReject = true;
-  } else if (score >= 75 && !hasCriticalFlags) {
-    // AUTO APPROVE: высокий score, нет критических проблем
+  } else if (score >= 90 && allFlags.length === 0) {
+    // AUTO APPROVE: только ИДЕАЛЬНЫЕ объявления (score 90+ и 0 флагов)
     approved = true;
   } else {
-    // AI REVIEW: пограничные случаи (score 30-75)
+    // AI REVIEW: ВСЕ остальные случаи - отправляем на AI
+    // Это включает score 40-90 или любые объявления с флагами
     needsAIReview = true;
   }
 
