@@ -26,7 +26,7 @@ export type Job = {
   start_date?: string
   duration?: string
   contact_phone: string
-  status: 'pending_review' | 'active' | 'inactive' | 'expired' | 'rejected'
+  status: 'pending_review' | 'pending_moderation' | 'active' | 'inactive' | 'expired' | 'rejected'
   is_vip: boolean
   is_urgent: boolean
   views_count: number

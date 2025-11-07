@@ -23,7 +23,7 @@ export default function AdminModerationPage() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null)
   const [rejectReason, setRejectReason] = useState('')
   const [processing, setProcessing] = useState(false)
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending_review' | 'rejected'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending_review' | 'pending_moderation' | 'rejected'>('all')
   const [retryLoading, setRetryLoading] = useState(false)
   const [retryResult, setRetryResult] = useState<any>(null)
 
@@ -217,6 +217,16 @@ export default function AdminModerationPage() {
             }`}
           >
             ⏳ Gözləyir
+          </button>
+          <button
+            onClick={() => setStatusFilter('pending_moderation')}
+            className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+              statusFilter === 'pending_moderation'
+                ? 'bg-orange-600 text-white'
+                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            🔄 Növbədə
           </button>
           <button
             onClick={() => setStatusFilter('rejected')}
