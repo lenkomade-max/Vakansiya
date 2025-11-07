@@ -61,7 +61,27 @@ export async function updateSession(request: NextRequest) {
       }
     )
 
-    await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    // Защита админ роутов
+    if (request.nextUrl.pathname.startsWith('/admin')) {
+      if (!user) {
+        // Не авторизован - перенаправить на главную
+        return NextResponse.redirect(new URL('/', request.url))
+      }
+
+      // Проверить роль админа
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      if (profile?.role !== 'admin') {
+        // Не админ - перенаправить на главную
+        return NextResponse.redirect(new URL('/', request.url))
+      }
+    }
   } catch (error) {
     console.error('Middleware error:', error)
   }
