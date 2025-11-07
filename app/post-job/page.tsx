@@ -47,11 +47,52 @@ export default function PostJobPage() {
     phoneNumber: '',
   })
 
+  // Date picker state for gundelik start date
+  const [startDateType, setStartDateType] = useState<'today' | 'tomorrow' | 'custom'>('today')
+
+  // Format Azerbaijan phone number: +994 XX XXX XX XX
+  const formatAzerbaijanPhone = (input: string): string => {
+    // Remove all non-digits
+    const digitsOnly = input.replace(/\D/g, '')
+
+    // If starts with 994, keep it; otherwise add it
+    let phoneDigits = digitsOnly
+    if (digitsOnly.startsWith('994')) {
+      phoneDigits = digitsOnly.slice(3) // Remove 994 prefix
+    }
+
+    // Limit to 9 digits after country code
+    phoneDigits = phoneDigits.slice(0, 9)
+
+    // Format: +994 XX XXX XX XX
+    let formatted = '+994'
+    if (phoneDigits.length > 0) {
+      formatted += ' ' + phoneDigits.slice(0, 2)
+    }
+    if (phoneDigits.length > 2) {
+      formatted += ' ' + phoneDigits.slice(2, 5)
+    }
+    if (phoneDigits.length > 5) {
+      formatted += ' ' + phoneDigits.slice(5, 7)
+    }
+    if (phoneDigits.length > 7) {
+      formatted += ' ' + phoneDigits.slice(7, 9)
+    }
+
+    return formatted
+  }
+
   const handleVakansiyaChange = (field: string, value: string) => {
+    if (field === 'contactPhone') {
+      value = formatAzerbaijanPhone(value)
+    }
     setVakansiyaForm(prev => ({ ...prev, [field]: value }))
   }
 
   const handleGundelikChange = (field: string, value: string) => {
+    if (field === 'phoneNumber') {
+      value = formatAzerbaijanPhone(value)
+    }
     setGundelikForm(prev => ({ ...prev, [field]: value }))
   }
 
@@ -64,6 +105,28 @@ export default function PostJobPage() {
     }
     checkAuth()
   }, [])
+
+  // Auto-update start date when type changes
+  useEffect(() => {
+    if (startDateType === 'today') {
+      const today = new Date()
+      const formatted = today.toLocaleDateString('az-AZ', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      })
+      setGundelikForm(prev => ({ ...prev, startDate: formatted }))
+    } else if (startDateType === 'tomorrow') {
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      const formatted = tomorrow.toLocaleDateString('az-AZ', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      })
+      setGundelikForm(prev => ({ ...prev, startDate: formatted }))
+    }
+  }, [startDateType])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -117,6 +180,13 @@ export default function PostJobPage() {
         }
         if (!vakansiyaForm.contactPhone) {
           toast.error('Telefon nömrəsi mütləqdir')
+          setIsSubmitting(false)
+          return
+        }
+        // Validate phone format: should have 12 digits total (994 + 9 digits)
+        const phoneDigits = vakansiyaForm.contactPhone.replace(/\D/g, '')
+        if (phoneDigits.length < 12 || !phoneDigits.startsWith('994')) {
+          toast.error('Telefon nömrəsi düzgün deyil (format: +994 XX XXX XX XX)')
           setIsSubmitting(false)
           return
         }
@@ -181,8 +251,15 @@ export default function PostJobPage() {
           setIsSubmitting(false)
           return
         }
-        if (!gundelikForm.phoneNumber || gundelikForm.phoneNumber.length < 9) {
+        if (!gundelikForm.phoneNumber) {
           toast.error('Telefon nömrəsi mütləqdir')
+          setIsSubmitting(false)
+          return
+        }
+        // Validate phone format: should have 12 digits total (994 + 9 digits)
+        const phoneDigitsGundelik = gundelikForm.phoneNumber.replace(/\D/g, '')
+        if (phoneDigitsGundelik.length < 12 || !phoneDigitsGundelik.startsWith('994')) {
+          toast.error('Telefon nömrəsi düzgün deyil (format: +994 XX XXX XX XX)')
           setIsSubmitting(false)
           return
         }
@@ -447,31 +524,84 @@ export default function PostJobPage() {
                   </select>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-black mb-2">
-                      Əmək haqqı <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={gundelikForm.salary}
-                      onChange={(e) => handleGundelikChange('salary', e.target.value)}
-                      placeholder="80 AZN/gün"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
-                      required
-                    />
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-black mb-2">
+                    Əmək haqqı <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={gundelikForm.salary}
+                    onChange={(e) => handleGundelikChange('salary', e.target.value)}
+                    placeholder="80 AZN/gün"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
+                    required
+                  />
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-black mb-2">
+                    İşin başlama tarixi <span className="text-red-500">*</span>
+                  </label>
+
+                  {/* Date Type Selector */}
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => setStartDateType('today')}
+                      className={`flex-1 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
+                        startDateType === 'today'
+                          ? 'bg-black text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      Bu gün
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStartDateType('tomorrow')}
+                      className={`flex-1 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
+                        startDateType === 'tomorrow'
+                          ? 'bg-black text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      Sabah
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStartDateType('custom')}
+                      className={`flex-1 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
+                        startDateType === 'custom'
+                          ? 'bg-black text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      Tarix seçin
+                    </button>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-black mb-2">Başlama</label>
+                  {/* Custom Date Picker */}
+                  {startDateType === 'custom' ? (
                     <input
-                      type="text"
-                      value={gundelikForm.startDate}
-                      onChange={(e) => handleGundelikChange('startDate', e.target.value)}
-                      placeholder="Bu gün, Sabah"
+                      type="date"
+                      value={gundelikForm.startDate ? new Date(gundelikForm.startDate).toISOString().split('T')[0] : ''}
+                      onChange={(e) => {
+                        const date = new Date(e.target.value)
+                        const formatted = date.toLocaleDateString('az-AZ', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric'
+                        })
+                        handleGundelikChange('startDate', formatted)
+                      }}
+                      min={new Date().toISOString().split('T')[0]}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
                     />
-                  </div>
+                  ) : (
+                    <div className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-base text-gray-900">
+                      {gundelikForm.startDate || 'Tarix seçilməyib'}
+                    </div>
+                  )}
                 </div>
 
                 <div className="mb-6">
