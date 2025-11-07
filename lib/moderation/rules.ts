@@ -3,7 +3,7 @@
  * Работает локально, без API вызовов
  */
 
-import eld from 'eld';
+const eld = require('eld');
 import comparison from 'string-comparison';
 import {
   spamKeywordsAZ,
