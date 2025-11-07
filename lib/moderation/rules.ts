@@ -328,6 +328,7 @@ export async function moderateContent(
   if (hasCritical) {
     return {
       approved: false,
+      autoReject: true, // Критические ошибки валидации → авто-отклонение
       flags: allFlags,
       language,
       score: 0,
