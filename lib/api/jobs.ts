@@ -1,6 +1,9 @@
-import { createClient } from '../supabase/client'
+'use server'
+
+import { createClient } from '../supabase/server'
 import { aiModerationWithFallback } from '../moderation/ai'
 import { moderateContent } from '../moderation/rules'
+import { revalidatePath } from 'next/cache'
 
 export type JobType = 'vakansiya' | 'gundelik'
 
@@ -58,7 +61,7 @@ export async function createJob(
   userId: string,
   jobData: CreateJobData
 ): Promise<{ success: boolean; jobId?: string; error?: string; status?: string }> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   console.log('[createJob] Starting job creation for user:', userId)
   console.log('[createJob] Job data:', jobData)
@@ -137,6 +140,10 @@ export async function createJob(
   }
 
   console.log('[createJob] Job created successfully:', data.id)
+
+  // Revalidate profile page to show new job
+  revalidatePath('/profile')
+
   return { success: true, jobId: data.id, status: finalStatus }
 }
 
@@ -144,7 +151,7 @@ export async function createJob(
  * Get all jobs for a user
  */
 export async function getUserJobs(userId: string): Promise<Job[]> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase
     .from('jobs')
@@ -164,7 +171,7 @@ export async function getUserJobs(userId: string): Promise<Job[]> {
  * Get a single job by ID
  */
 export async function getJob(jobId: string): Promise<Job | null> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase
     .from('jobs')
@@ -187,7 +194,7 @@ export async function updateJob(
   jobId: string,
   updates: Partial<CreateJobData>
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { error } = await supabase
     .from('jobs')
@@ -206,7 +213,7 @@ export async function updateJob(
  * Delete a job
  */
 export async function deleteJob(jobId: string): Promise<{ success: boolean; error?: string }> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { error } = await supabase
     .from('jobs')
@@ -225,7 +232,7 @@ export async function deleteJob(jobId: string): Promise<{ success: boolean; erro
  * Get all active jobs (public)
  */
 export async function getActiveJobs(jobType?: JobType): Promise<Job[]> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   let query = supabase
     .from('jobs')
