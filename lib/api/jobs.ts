@@ -82,7 +82,7 @@ export async function createJob(
 
   console.log('[createJob] Moderation result:', moderationResult)
 
-  let finalStatus: 'pending_review' | 'active' | 'rejected' = 'pending_review'
+  let finalStatus: 'pending_review' | 'pending_moderation' | 'active' | 'rejected' = 'pending_review'
   let aiResult: any = null
 
   // ===== НОВАЯ ЛОГИКА МОДЕРАЦИИ: 90% авто-решений =====
