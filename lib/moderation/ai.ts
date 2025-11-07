@@ -22,9 +22,13 @@ export async function aiModerationReview(
 ): Promise<AIReviewResult> {
   const apiKey = process.env.OPENROUTER_API_KEY;
 
+  console.log('[AI Moderation] Starting primary AI review...')
+  console.log('[AI Moderation] API key exists:', !!apiKey)
+  console.log('[AI Moderation] API key length:', apiKey?.length || 0)
+
   // Если нет API ключа, возвращаем ручную проверку
   if (!apiKey) {
-    console.warn('OPENROUTER_API_KEY not set, skipping AI review');
+    console.warn('[AI Moderation] OPENROUTER_API_KEY not set, skipping AI review');
     return {
       approved: false,
       confidence: 0,
@@ -66,6 +70,9 @@ Respond in JSON format ONLY:
 }`;
 
   try {
+    console.log('[AI Moderation] Sending request to OpenRouter...')
+    console.log('[AI Moderation] Model: meta-llama/llama-3.3-70b-instruct:free')
+
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -91,12 +98,16 @@ Respond in JSON format ONLY:
       }),
     });
 
+    console.log('[AI Moderation] Response status:', response.status)
+    console.log('[AI Moderation] Response ok:', response.ok)
+
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenRouter API error:', response.status, errorText);
+      console.error('[AI Moderation] OpenRouter API error:', response.status, errorText);
 
       // Если лимит исчерпан, отправляем на ручную проверку
       if (response.status === 429) {
+        console.warn('[AI Moderation] Rate limit reached (429)')
         return {
           approved: false,
           confidence: 0,
@@ -106,18 +117,38 @@ Respond in JSON format ONLY:
         };
       }
 
-      throw new Error(`OpenRouter API error: ${response.status}`);
+      throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
+    console.log('[AI Moderation] Response data:', JSON.stringify(data, null, 2))
+
+    // Проверяем структуру ответа
+    if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+      console.error('[AI Moderation] Invalid response structure: no choices array')
+      throw new Error('Invalid OpenRouter response: no choices');
+    }
+
+    const content = data.choices[0].message?.content;
+    if (!content) {
+      console.error('[AI Moderation] Invalid response structure: no content in message')
+      throw new Error('Invalid OpenRouter response: no content');
+    }
+
+    console.log('[AI Moderation] AI response content:', content)
 
     // Парсим JSON ответ
-    const result: AIReviewResult = JSON.parse(content);
-
-    return result;
+    try {
+      const result: AIReviewResult = JSON.parse(content);
+      console.log('[AI Moderation] Parsed result:', result)
+      return result;
+    } catch (parseError) {
+      console.error('[AI Moderation] Failed to parse JSON response:', parseError)
+      console.error('[AI Moderation] Content was:', content)
+      throw new Error(`Failed to parse AI response as JSON: ${parseError}`);
+    }
   } catch (error) {
-    console.error('AI moderation error:', error);
+    console.error('[AI Moderation] Primary AI moderation error:', error);
 
     // В случае ошибки, отправляем на ручную проверку
     return {
@@ -139,7 +170,10 @@ export async function aiModerationReviewFallback(
 ): Promise<AIReviewResult> {
   const apiKey = process.env.OPENROUTER_API_KEY;
 
+  console.log('[AI Moderation Fallback] Starting fallback AI review...')
+
   if (!apiKey) {
+    console.warn('[AI Moderation Fallback] No API key')
     return {
       approved: false,
       confidence: 0,
@@ -150,6 +184,8 @@ export async function aiModerationReviewFallback(
   }
 
   try {
+    console.log('[AI Moderation Fallback] Using model: qwen/qwq-32b:free')
+
     // Используем Qwen QwQ 32B как fallback
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -176,16 +212,41 @@ export async function aiModerationReviewFallback(
       }),
     });
 
+    console.log('[AI Moderation Fallback] Response status:', response.status)
+
     if (!response.ok) {
-      throw new Error(`OpenRouter fallback API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('[AI Moderation Fallback] API error:', response.status, errorText);
+      throw new Error(`OpenRouter fallback API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    const result: AIReviewResult = JSON.parse(data.choices[0].message.content);
+    console.log('[AI Moderation Fallback] Response data:', JSON.stringify(data, null, 2))
 
-    return result;
+    if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+      console.error('[AI Moderation Fallback] Invalid response: no choices')
+      throw new Error('Invalid fallback response: no choices');
+    }
+
+    const content = data.choices[0].message?.content;
+    if (!content) {
+      console.error('[AI Moderation Fallback] Invalid response: no content')
+      throw new Error('Invalid fallback response: no content');
+    }
+
+    console.log('[AI Moderation Fallback] Content:', content)
+
+    try {
+      const result: AIReviewResult = JSON.parse(content);
+      console.log('[AI Moderation Fallback] Parsed result:', result)
+      return result;
+    } catch (parseError) {
+      console.error('[AI Moderation Fallback] JSON parse error:', parseError)
+      console.error('[AI Moderation Fallback] Content was:', content)
+      throw new Error(`Failed to parse fallback response: ${parseError}`);
+    }
   } catch (error) {
-    console.error('AI fallback moderation error:', error);
+    console.error('[AI Moderation Fallback] Fallback moderation error:', error);
     return {
       approved: false,
       confidence: 0,
@@ -203,20 +264,29 @@ export async function aiModerationWithFallback(
   jobPost: JobPost,
   rulesFlags: ModerationFlag[]
 ): Promise<AIReviewResult> {
+  console.log('[AI Moderation] Starting AI moderation with fallback...')
+  console.log('[AI Moderation] Job post:', { title: jobPost.title, company: jobPost.company })
+  console.log('[AI Moderation] Rules flags count:', rulesFlags.length)
+
   try {
     // Пробуем основную модель
     const result = await aiModerationReview(jobPost, rulesFlags);
 
+    console.log('[AI Moderation] Primary model result:', result)
+
     // Если получили результат с confidence > 0, возвращаем
     if (result.confidence > 0) {
+      console.log('[AI Moderation] Primary model succeeded with confidence:', result.confidence)
       return result;
     }
 
     // Иначе пробуем fallback
-    console.log('Primary AI model failed, trying fallback...');
-    return await aiModerationReviewFallback(jobPost, rulesFlags);
+    console.log('[AI Moderation] Primary model returned confidence 0, trying fallback...');
+    const fallbackResult = await aiModerationReviewFallback(jobPost, rulesFlags);
+    console.log('[AI Moderation] Fallback result:', fallbackResult)
+    return fallbackResult;
   } catch (error) {
-    console.error('AI moderation with fallback failed:', error);
+    console.error('[AI Moderation] AI moderation with fallback failed:', error);
     return {
       approved: false,
       confidence: 0,
