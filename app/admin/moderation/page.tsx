@@ -24,6 +24,8 @@ export default function AdminModerationPage() {
   const [rejectReason, setRejectReason] = useState('')
   const [processing, setProcessing] = useState(false)
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending_review' | 'rejected'>('all')
+  const [retryLoading, setRetryLoading] = useState(false)
+  const [retryResult, setRetryResult] = useState<any>(null)
 
   useEffect(() => {
     checkAdminAndLoadJobs()
@@ -101,6 +103,35 @@ export default function AdminModerationPage() {
     }
   }
 
+  const handleRetryModeration = async () => {
+    if (!confirm('Bütün gözləyən elanları yenidən yoxlamaq istəyirsiniz?')) {
+      return
+    }
+
+    setRetryLoading(true)
+    setRetryResult(null)
+
+    try {
+      const response = await fetch('/api/admin/retry-moderation')
+      const data = await response.json()
+
+      if (data.success) {
+        setRetryResult(data)
+        alert(`✅ Uğurla tamamlandı!\n\nİşləndi: ${data.results?.total || 0}\nTəsdiqləndi: ${data.results?.approved || 0}\nRədd edildi: ${data.results?.rejected || 0}\nYoxlanılır: ${data.results?.pending_review || 0}`)
+
+        // Yenilə
+        await loadJobs()
+      } else {
+        alert(`❌ Xəta: ${data.error || 'Naməlum xəta'}`)
+      }
+    } catch (error) {
+      console.error('Retry moderation error:', error)
+      alert('❌ Xəta baş verdi')
+    } finally {
+      setRetryLoading(false)
+    }
+  }
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('az-AZ', {
@@ -154,18 +185,19 @@ export default function AdminModerationPage() {
           </p>
         </div>
 
-        {/* Status Filters */}
-        <div className="flex gap-2 mb-6 flex-wrap">
-          <button
-            onClick={() => setStatusFilter('all')}
-            className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all ${
-              statusFilter === 'all'
-                ? 'bg-black text-white'
-                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            🔄 Hamısı ({jobs.length})
-          </button>
+        {/* Status Filters + Retry Button */}
+        <div className="flex gap-2 mb-6 flex-wrap items-center justify-between">
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => setStatusFilter('all')}
+              className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+                statusFilter === 'all'
+                  ? 'bg-black text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              🔄 Hamısı ({jobs.length})
+            </button>
           <button
             onClick={() => setStatusFilter('active')}
             className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all ${
@@ -195,6 +227,25 @@ export default function AdminModerationPage() {
             }`}
           >
             ❌ Rədd edilib
+          </button>
+          </div>
+
+          {/* Retry Moderation Button */}
+          <button
+            onClick={handleRetryModeration}
+            disabled={retryLoading}
+            className="px-6 py-2.5 rounded-lg font-semibold text-sm bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+          >
+            {retryLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Yoxlanılır...
+              </>
+            ) : (
+              <>
+                🔄 Yenidən yoxla
+              </>
+            )}
           </button>
         </div>
 

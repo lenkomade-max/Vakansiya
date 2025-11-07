@@ -141,8 +141,9 @@ export async function createJob(
         finalStatus = 'pending_review'
       }
     } catch (error) {
-      console.error('[createJob] AI moderation failed, defaulting to manual review:', error)
-      finalStatus = 'pending_review'
+      console.error('[createJob] AI moderation failed, setting to pending_moderation for retry:', error)
+      // Если AI упал → pending_moderation (очередь задач обработает позже)
+      finalStatus = 'pending_moderation'
     }
   }
 
