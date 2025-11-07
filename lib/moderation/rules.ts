@@ -28,6 +28,7 @@ export type ModerationFlag = {
 
 export type ModerationResult = {
   approved: boolean;
+  autoReject: boolean; // Automatically reject without manual review
   flags: ModerationFlag[];
   language: string | null;
   score: number; // 0-100, где 100 = чистый контент
@@ -374,20 +375,40 @@ export async function moderateContent(
 
   score = Math.max(0, score);
 
+  // ===== НОВАЯ ЛОГИКА: 90% авто-решений, 10% manual review =====
+
+  // Критические флаги, требующие авто-отклонения
+  const autoRejectFlags = ['FRAUD_KEYWORDS', 'PROFANITY_DETECTED', 'PYRAMID_SCHEME'];
+  const hasAutoRejectFlag = allFlags.some(f => autoRejectFlags.includes(f.type));
+
+  // Есть ли любые критические флаги
+  const hasCriticalFlags = allFlags.some(f => f.severity === 'critical');
+
   // Решение о модерации:
-  // - score >= 80: автоматически одобрено
-  // - score < 80 и >= 50: отправить на AI проверку
-  // - score < 50: автоматически отклонено
+  // 1. score >= 75 и нет критических → AUTO APPROVE (60-70% случаев)
+  // 2. score < 30 ИЛИ есть флаги мошенничества/мата → AUTO REJECT (10-20% случаев)
+  // 3. score 30-75 и нет авто-отклонения → AI REVIEW (15-25% случаев)
+  //    - AI с высокой уверенностью → авто-решение
+  //    - AI с низкой уверенностью → manual review (~10% от всех)
 
-  const hasCriticalFlags = allFlags.some(
-    f => f.severity === 'critical'
-  );
+  let approved = false;
+  let autoReject = false;
+  let needsAIReview = false;
 
-  const approved = score >= 80 && !hasCriticalFlags;
-  const needsAIReview = score >= 50 && score < 80 && !hasCriticalFlags;
+  if (hasAutoRejectFlag || score < 30) {
+    // AUTO REJECT: мошенничество, мат, очень низкий score
+    autoReject = true;
+  } else if (score >= 75 && !hasCriticalFlags) {
+    // AUTO APPROVE: высокий score, нет критических проблем
+    approved = true;
+  } else {
+    // AI REVIEW: пограничные случаи (score 30-75)
+    needsAIReview = true;
+  }
 
   return {
-    approved: approved,
+    approved,
+    autoReject,
     flags: allFlags,
     language,
     score,

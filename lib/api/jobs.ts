@@ -85,37 +85,60 @@ export async function createJob(
   let finalStatus: 'pending_review' | 'active' | 'rejected' = 'pending_review'
   let aiResult: any = null
 
-  // If rules found issues, send to manual review
-  if (!moderationResult.approved || moderationResult.flags.length > 0) {
-    console.log('Rules found issues, sending to manual review:', moderationResult.flags)
-    finalStatus = 'pending_review'
-  } else {
-    // No rule violations, check with AI
+  // ===== НОВАЯ ЛОГИКА МОДЕРАЦИИ: 90% авто-решений =====
+
+  // 1. AUTO REJECT: мошенничество, мат, очень низкий score
+  if (moderationResult.autoReject) {
+    console.log('[createJob] AUTO REJECT by rules:', moderationResult.flags)
+    finalStatus = 'rejected'
+    return {
+      success: false,
+      error: 'Elan avtomatik olaraq rədd edildi (qaydalara uyğun deyil)'
+    }
+  }
+
+  // 2. AUTO APPROVE: высокий score, нет критических проблем
+  if (moderationResult.approved) {
+    console.log('[createJob] AUTO APPROVE by rules (score:', moderationResult.score, ')')
+    finalStatus = 'active'
+  }
+
+  // 3. AI REVIEW: пограничные случаи (score 30-75)
+  else if (moderationResult.needsAIReview) {
+    console.log('[createJob] Sending to AI review (score:', moderationResult.score, ')')
     try {
       aiResult = await aiModerationWithFallback(jobPost, moderationResult.flags)
+      console.log('[createJob] AI result:', aiResult)
 
-      console.log('AI moderation result:', aiResult)
-
-      // AI approved with high confidence → auto approve
-      if (aiResult.approved && aiResult.confidence >= 0.9) {
+      // AI approved with confidence >= 0.85 → auto approve
+      if (aiResult.approved && aiResult.confidence >= 0.85) {
+        console.log('[createJob] AUTO APPROVE by AI (confidence:', aiResult.confidence, ')')
         finalStatus = 'active'
       }
-      // AI rejected with high confidence → auto reject
-      else if (!aiResult.approved && aiResult.confidence >= 0.9 && aiResult.recommendation === 'reject') {
+      // AI rejected with confidence >= 0.85 → auto reject
+      else if (!aiResult.approved && aiResult.confidence >= 0.85 && aiResult.recommendation === 'reject') {
+        console.log('[createJob] AUTO REJECT by AI (confidence:', aiResult.confidence, ')')
         finalStatus = 'rejected'
         return {
           success: false,
           error: `Elan avtomatik olaraq rədd edildi: ${aiResult.reason}`
         }
       }
-      // Low confidence or manual_review → send to review
+      // Low confidence (< 0.85) → manual review
       else {
+        console.log('[createJob] MANUAL REVIEW (AI confidence too low:', aiResult.confidence, ')')
         finalStatus = 'pending_review'
       }
     } catch (error) {
-      console.error('AI moderation failed, defaulting to manual review:', error)
+      console.error('[createJob] AI moderation failed, defaulting to manual review:', error)
       finalStatus = 'pending_review'
     }
+  }
+
+  // 4. Fallback: если ничего не сработало → manual review
+  else {
+    console.log('[createJob] Fallback to MANUAL REVIEW')
+    finalStatus = 'pending_review'
   }
 
   // Insert job with determined status AND moderation results
