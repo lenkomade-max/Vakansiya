@@ -65,7 +65,7 @@ export async function getPendingJobs() {
 /**
  * Получить ВСЕ задания (для админ панели) с фильтром по статусу
  */
-export async function getAllJobs(statusFilter?: 'all' | 'active' | 'pending_review' | 'rejected') {
+export async function getAllJobs(statusFilter?: 'all' | 'active' | 'pending_review' | 'pending_moderation' | 'rejected') {
   const supabase = await createClient()
 
   // Проверка админа
