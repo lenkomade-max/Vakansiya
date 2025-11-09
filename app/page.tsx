@@ -126,6 +126,11 @@ export default function HomePage() {
   }
 
   const handlePostJob = () => {
+    if (!isAuthenticated) {
+      // Если пользователь не авторизован, редирект на Google вход
+      signInWithGoogle()
+      return
+    }
     router.push('/post-job')
   }
 
