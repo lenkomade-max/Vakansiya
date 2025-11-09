@@ -4,17 +4,22 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Navigation from '@/components/ui/Navigation'
 import SearchBar from '@/components/ui/SearchBar'
+import CategoryDashboard from '@/components/ui/CategoryDashboard'
 import JobCard from '@/components/job/JobCard'
 import { ShortJobCard, ShortJob } from '@/components/short-jobs/ShortJobCard'
 import { BriefcaseIcon, ClockIcon } from '@heroicons/react/24/outline'
 import { signInWithGoogle, getCurrentUser } from '@/lib/auth'
 import { getActiveJobsPaginated, Job as DBJob } from '@/lib/api/jobs'
+import { SearchFilters } from '@/components/ui/SearchBar'
 
 export default function HomePage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'vakansiyalar' | 'gundelik'>('vakansiyalar')
   const [jobs, setJobs] = useState<DBJob[]>([])
   const [shortJobs, setShortJobs] = useState<DBJob[]>([])
+  const [allJobs, setAllJobs] = useState<DBJob[]>([]) // Все вакансии (для фильтрации)
+  const [allShortJobs, setAllShortJobs] = useState<DBJob[]>([]) // Все gundəlik (для фильтрации)
+  const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [vakansiyalarPage, setVakansiyalarPage] = useState(1)
   const [gundelikPage, setGundelikPage] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -37,6 +42,7 @@ export default function HomePage() {
       limit: 20
     })
     setJobs(vakansiyalarResult.jobs)
+    setAllJobs(vakansiyalarResult.jobs) // Сохраняем все для фильтрации
 
     // Загружаем гундалик работы
     const gundelikResult = await getActiveJobsPaginated({
@@ -45,6 +51,7 @@ export default function HomePage() {
       limit: 8
     })
     setShortJobs(gundelikResult.jobs)
+    setAllShortJobs(gundelikResult.jobs) // Сохраняем все для фильтрации
 
     setLoading(false)
   }
@@ -112,13 +119,72 @@ export default function HomePage() {
     setLoading(false)
   }
 
-  const handleSearch = (query: string, location: string, category: string) => {
-    // Переход на страницу вакансий с параметрами поиска
-    const params = new URLSearchParams()
-    if (query) params.set('q', query)
-    if (location) params.set('location', location)
-    if (category) params.set('category', category)
-    router.push(`/vakansiyalar?${params.toString()}`)
+  const handleSearch = (filters: SearchFilters) => {
+    // Фильтруем вакансии на клиенте
+    setLoading(true)
+
+    let filtered = activeTab === 'vakansiyalar' ? [...jobs] : [...shortJobs]
+
+    // Фильтр по тексту (поиск в title, company, description)
+    if (filters.query) {
+      const queryLower = filters.query.toLowerCase()
+      filtered = filtered.filter(job =>
+        job.title.toLowerCase().includes(queryLower) ||
+        (job.company && job.company.toLowerCase().includes(queryLower)) ||
+        (job.description && job.description.toLowerCase().includes(queryLower))
+      )
+    }
+
+    // Фильтр по городу
+    if (filters.location) {
+      filtered = filtered.filter(job =>
+        job.location.toLowerCase().includes(filters.location.toLowerCase())
+      )
+    }
+
+    // Фильтр по зарплате
+    if (filters.salary) {
+      filtered = filtered.filter(job => {
+        if (!job.salary) return false
+        const salary = job.salary.toLowerCase()
+
+        if (filters.salary === '500-1000') {
+          return salary.includes('500') || salary.includes('600') || salary.includes('700') ||
+                 salary.includes('800') || salary.includes('900') || salary.includes('1000')
+        } else if (filters.salary === '1000-2000') {
+          return salary.includes('1000') || salary.includes('1500') || salary.includes('2000')
+        } else if (filters.salary === '2000-3000') {
+          return salary.includes('2000') || salary.includes('2500') || salary.includes('3000')
+        } else if (filters.salary === '3000+') {
+          return salary.includes('3000') || salary.includes('4000') || salary.includes('5000') ||
+                 salary.includes('6000') || salary.includes('7000') || salary.includes('8000')
+        }
+        return true
+      })
+    }
+
+    // Фильтр по типу занятости
+    if (filters.employmentType) {
+      filtered = filtered.filter(job =>
+        job.employment_type && job.employment_type.includes(filters.employmentType!)
+      )
+    }
+
+    // Фильтр по опыту
+    if (filters.experience) {
+      filtered = filtered.filter(job =>
+        job.experience && job.experience.includes(filters.experience!)
+      )
+    }
+
+    // Обновляем отфильтрованные вакансии
+    if (activeTab === 'vakansiyalar') {
+      setJobs(filtered as DBJob[])
+    } else {
+      setShortJobs(filtered as DBJob[])
+    }
+
+    setLoading(false)
   }
 
   const handleLogin = () => {
@@ -138,6 +204,32 @@ export default function HomePage() {
     router.push(`/vakansiyalar/${jobId}`)
   }
 
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category)
+
+    // Фильтруем по категории
+    if (activeTab === 'vakansiyalar') {
+      if (!category) {
+        setJobs(allJobs) // Показываем все
+      } else {
+        const filtered = allJobs.filter(job =>
+          job.category_name?.toLowerCase().includes(category.toLowerCase()) ||
+          job.parent_category_name?.toLowerCase().includes(category.toLowerCase())
+        )
+        setJobs(filtered)
+      }
+    } else {
+      if (!category) {
+        setShortJobs(allShortJobs) // Показываем все
+      } else {
+        const filtered = allShortJobs.filter(job =>
+          job.category.toLowerCase().includes(category.toLowerCase())
+        )
+        setShortJobs(filtered)
+      }
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Навигация */}
@@ -154,7 +246,7 @@ export default function HomePage() {
           <SearchBar onSearch={handleSearch} />
 
           {/* Табы - переключение между Vakansiyalar и Gündəlik işlər */}
-          <div className="mt-4 flex items-center gap-2 bg-gray-100 p-1 rounded-xl max-w-md mx-auto">
+          <div className="mt-6 flex items-center gap-2 bg-gray-100 p-1 rounded-xl max-w-md mx-auto">
             <button
               onClick={() => setActiveTab('vakansiyalar')}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all ${
@@ -180,6 +272,13 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Category Dashboard */}
+      <CategoryDashboard
+        activeTab={activeTab}
+        selectedCategory={selectedCategory}
+        onCategorySelect={handleCategorySelect}
+      />
 
       {/* Vakansiyalar - показываем только если выбран таб vakansiyalar */}
       <section className={`py-6 md:py-12 bg-gray-50 ${activeTab !== 'vakansiyalar' ? 'hidden' : ''}`}>
