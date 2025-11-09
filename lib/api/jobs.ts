@@ -12,7 +12,9 @@ export type Job = {
   user_id: string
   job_type: JobType
   title: string
-  category: string
+  category: string // UUID of subcategory
+  category_name?: string // Azerbaijani name for display
+  parent_category_name?: string // Parent category name for display
   location: string
   salary?: string
   description?: string
@@ -290,7 +292,16 @@ export async function getActiveJobs(jobType?: JobType): Promise<Job[]> {
 
   let query = supabase
     .from('jobs')
-    .select('*')
+    .select(`
+      *,
+      category_info:category (
+        id,
+        name_az,
+        parent:parent_id (
+          name_az
+        )
+      )
+    `)
     .eq('status', 'active')
     .order('created_at', { ascending: false })
 
@@ -305,7 +316,14 @@ export async function getActiveJobs(jobType?: JobType): Promise<Job[]> {
     return []
   }
 
-  return data || []
+  // Transform data to include category names
+  const jobs = (data || []).map((job: any) => ({
+    ...job,
+    category_name: job.category_info?.name_az,
+    parent_category_name: job.category_info?.parent?.name_az,
+  }))
+
+  return jobs
 }
 
 /**
@@ -324,10 +342,19 @@ export async function getActiveJobsPaginated(params: {
   // Calculate offset
   const offset = (page - 1) * limit
 
-  // Build query
+  // Build query with category join to get category names
   let query = supabase
     .from('jobs')
-    .select('*', { count: 'exact' })
+    .select(`
+      *,
+      category_info:category (
+        id,
+        name_az,
+        parent:parent_id (
+          name_az
+        )
+      )
+    `, { count: 'exact' })
     .eq('status', 'active')
 
   // Apply filters
@@ -355,8 +382,15 @@ export async function getActiveJobsPaginated(params: {
     return { jobs: [], total: 0, hasMore: false }
   }
 
+  // Transform data to include category names
+  const jobs = (data || []).map((job: any) => ({
+    ...job,
+    category_name: job.category_info?.name_az,
+    parent_category_name: job.category_info?.parent?.name_az,
+  }))
+
   const total = count || 0
   const hasMore = offset + limit < total
 
-  return { jobs: data || [], total, hasMore }
+  return { jobs, total, hasMore }
 }

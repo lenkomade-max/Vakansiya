@@ -36,6 +36,49 @@ export async function getCategories(type: 'vacancy' | 'short_job'): Promise<Cate
 }
 
 /**
+ * Get only PARENT categories (main categories without parent_id)
+ */
+export async function getParentCategories(type: 'vacancy' | 'short_job'): Promise<Category[]> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('categories')
+    .select('*')
+    .eq('type', type)
+    .is('parent_id', null)
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+
+  if (error) {
+    console.error('Error fetching parent categories:', error)
+    return []
+  }
+
+  return data || []
+}
+
+/**
+ * Get SUBCATEGORIES for a specific parent category
+ */
+export async function getSubcategories(parentId: string): Promise<Category[]> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('categories')
+    .select('*')
+    .eq('parent_id', parentId)
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+
+  if (error) {
+    console.error('Error fetching subcategories:', error)
+    return []
+  }
+
+  return data || []
+}
+
+/**
  * Get all active cities
  */
 export async function getCities(): Promise<string[]> {

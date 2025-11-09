@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 import Navigation from '@/components/ui/Navigation'
 import { getCurrentUser } from '@/lib/auth'
 import { createJob } from '@/lib/api/jobs'
-import { getCategories, getCities, Category } from '@/lib/api/categories'
+import { getParentCategories, getSubcategories, getCities, Category } from '@/lib/api/categories'
 import { CATEGORIES, ShortJobCategory } from '@/components/short-jobs/CategoryIcons'
 import { PlusCircleIcon, BriefcaseIcon, ClockIcon } from '@heroicons/react/24/outline'
 
@@ -20,8 +20,10 @@ export default function PostJobPage() {
   const [user, setUser] = useState<any>(null)
 
   // Categories and cities from DB
-  const [vakansiyaCategories, setVakansiyaCategories] = useState<Category[]>([])
-  const [gundelikCategories, setGundelikCategories] = useState<Category[]>([])
+  const [vakansiyaParentCategories, setVakansiyaParentCategories] = useState<Category[]>([])
+  const [gundelikParentCategories, setGundelikParentCategories] = useState<Category[]>([])
+  const [vakansiyaSubcategories, setVakansiyaSubcategories] = useState<Category[]>([])
+  const [gundelikSubcategories, setGundelikSubcategories] = useState<Category[]>([])
   const [cities, setCities] = useState<string[]>([])
   const [loadingData, setLoadingData] = useState(true)
 
@@ -29,7 +31,8 @@ export default function PostJobPage() {
   const [vakansiyaForm, setVakansiyaForm] = useState({
     title: '',
     company: '',
-    category: '',
+    parentCategory: '', // ID главной категории
+    subcategory: '', // ID подкатегории
     location: '',
     salary: '',
     employmentType: '',
@@ -45,7 +48,8 @@ export default function PostJobPage() {
   // Форма для коротких работ
   const [gundelikForm, setGundelikForm] = useState({
     title: '',
-    category: '' as ShortJobCategory | '',
+    parentCategory: '', // ID главной категории
+    subcategory: '', // ID подкатегории
     location: '',
     salary: '',
     startDate: '',
@@ -108,18 +112,48 @@ export default function PostJobPage() {
   useEffect(() => {
     const loadData = async () => {
       setLoadingData(true)
-      const [vakCats, gunCats, citiesList] = await Promise.all([
-        getCategories('vacancy'),
-        getCategories('short_job'),
+      const [vakParents, gunParents, citiesList] = await Promise.all([
+        getParentCategories('vacancy'),
+        getParentCategories('short_job'),
         getCities()
       ])
-      setVakansiyaCategories(vakCats)
-      setGundelikCategories(gunCats)
+      setVakansiyaParentCategories(vakParents)
+      setGundelikParentCategories(gunParents)
       setCities(citiesList)
       setLoadingData(false)
     }
     loadData()
   }, [])
+
+  // Load subcategories when parent category changes for Vakansiya
+  useEffect(() => {
+    const loadVakansiyaSubcats = async () => {
+      if (vakansiyaForm.parentCategory) {
+        const subcats = await getSubcategories(vakansiyaForm.parentCategory)
+        setVakansiyaSubcategories(subcats)
+        // Reset subcategory when parent changes
+        setVakansiyaForm(prev => ({ ...prev, subcategory: '' }))
+      } else {
+        setVakansiyaSubcategories([])
+      }
+    }
+    loadVakansiyaSubcats()
+  }, [vakansiyaForm.parentCategory])
+
+  // Load subcategories when parent category changes for Gundelik
+  useEffect(() => {
+    const loadGundelikSubcats = async () => {
+      if (gundelikForm.parentCategory) {
+        const subcats = await getSubcategories(gundelikForm.parentCategory)
+        setGundelikSubcategories(subcats)
+        // Reset subcategory when parent changes
+        setGundelikForm(prev => ({ ...prev, subcategory: '' }))
+      } else {
+        setGundelikSubcategories([])
+      }
+    }
+    loadGundelikSubcats()
+  }, [gundelikForm.parentCategory])
 
   // Check authentication on mount
   useEffect(() => {
@@ -186,8 +220,13 @@ export default function PostJobPage() {
           setIsSubmitting(false)
           return
         }
-        if (!vakansiyaForm.category) {
+        if (!vakansiyaForm.parentCategory) {
           toast.error('Kateqoriya seçin')
+          setIsSubmitting(false)
+          return
+        }
+        if (!vakansiyaForm.subcategory) {
+          toast.error('Alt kateqoriya seçin')
           setIsSubmitting(false)
           return
         }
@@ -228,7 +267,7 @@ export default function PostJobPage() {
           job_type: 'vakansiya',
           title: vakansiyaForm.title,
           company: vakansiyaForm.company,
-          category: vakansiyaForm.category,
+          category: vakansiyaForm.subcategory, // Using subcategory ID
           location: vakansiyaForm.location,
           salary: vakansiyaForm.salary || undefined,
           description: vakansiyaForm.description || undefined,
@@ -264,8 +303,13 @@ export default function PostJobPage() {
           setIsSubmitting(false)
           return
         }
-        if (!gundelikForm.category) {
+        if (!gundelikForm.parentCategory) {
           toast.error('Kateqoriya seçin')
+          setIsSubmitting(false)
+          return
+        }
+        if (!gundelikForm.subcategory) {
+          toast.error('Alt kateqoriya seçin')
           setIsSubmitting(false)
           return
         }
@@ -305,7 +349,7 @@ export default function PostJobPage() {
         const result = await createJob(user.id, {
           job_type: 'gundelik',
           title: gundelikForm.title,
-          category: gundelikForm.category,
+          category: gundelikForm.subcategory, // Using subcategory ID
           location: gundelikForm.location,
           salary: gundelikForm.salary,
           description: gundelikForm.description || undefined,
@@ -433,32 +477,50 @@ export default function PostJobPage() {
                       Kateqoriya <span className="text-red-500">*</span>
                     </label>
                     <select
-                      value={vakansiyaForm.category}
-                      onChange={(e) => handleVakansiyaChange('category', e.target.value)}
+                      value={vakansiyaForm.parentCategory}
+                      onChange={(e) => handleVakansiyaChange('parentCategory', e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base bg-white"
                       required
                       disabled={loadingData}
                     >
-                      <option value="">{loadingData ? 'Yüklənir...' : 'Seçin'}</option>
-                      {vakansiyaCategories.map(cat => <option key={cat.id} value={cat.name}>{cat.name_az}</option>)}
+                      <option value="">{loadingData ? 'Yüklənir...' : 'Kateqoriya seçin'}</option>
+                      {vakansiyaParentCategories.map(cat => <option key={cat.id} value={cat.id}>{cat.name_az}</option>)}
                     </select>
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-black mb-2">
-                      Şəhər <span className="text-red-500">*</span>
+                      Alt kateqoriya <span className="text-red-500">*</span>
                     </label>
                     <select
-                      value={vakansiyaForm.location}
-                      onChange={(e) => handleVakansiyaChange('location', e.target.value)}
+                      value={vakansiyaForm.subcategory}
+                      onChange={(e) => handleVakansiyaChange('subcategory', e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base bg-white"
                       required
-                      disabled={loadingData}
+                      disabled={!vakansiyaForm.parentCategory || vakansiyaSubcategories.length === 0}
                     >
-                      <option value="">{loadingData ? 'Yüklənir...' : 'Seçin'}</option>
-                      {cities.map(city => <option key={city} value={city}>{city}</option>)}
+                      <option value="">
+                        {!vakansiyaForm.parentCategory ? 'Əvvəlcə kateqoriya seçin' : 'Alt kateqoriya seçin'}
+                      </option>
+                      {vakansiyaSubcategories.map(cat => <option key={cat.id} value={cat.id}>{cat.name_az}</option>)}
                     </select>
                   </div>
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-black mb-2">
+                    Şəhər <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={vakansiyaForm.location}
+                    onChange={(e) => handleVakansiyaChange('location', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base bg-white"
+                    required
+                    disabled={loadingData}
+                  >
+                    <option value="">{loadingData ? 'Yüklənir...' : 'Şəhər seçin'}</option>
+                    {cities.map(city => <option key={city} value={city}>{city}</option>)}
+                  </select>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -532,20 +594,40 @@ export default function PostJobPage() {
                   />
                 </div>
 
-                <div className="mb-6">
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Kateqoriya <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={gundelikForm.category}
-                    onChange={(e) => handleGundelikChange('category', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base bg-white"
-                    required
-                    disabled={loadingData}
-                  >
-                    <option value="">{loadingData ? 'Yüklənir...' : 'Seçin'}</option>
-                    {gundelikCategories.map(cat => <option key={cat.id} value={cat.name}>{cat.name_az}</option>)}
-                  </select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-black mb-2">
+                      Kateqoriya <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={gundelikForm.parentCategory}
+                      onChange={(e) => handleGundelikChange('parentCategory', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base bg-white"
+                      required
+                      disabled={loadingData}
+                    >
+                      <option value="">{loadingData ? 'Yüklənir...' : 'Kateqoriya seçin'}</option>
+                      {gundelikParentCategories.map(cat => <option key={cat.id} value={cat.id}>{cat.name_az}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-black mb-2">
+                      Alt kateqoriya <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={gundelikForm.subcategory}
+                      onChange={(e) => handleGundelikChange('subcategory', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base bg-white"
+                      required
+                      disabled={!gundelikForm.parentCategory || gundelikSubcategories.length === 0}
+                    >
+                      <option value="">
+                        {!gundelikForm.parentCategory ? 'Əvvəlcə kateqoriya seçin' : 'Alt kateqoriya seçin'}
+                      </option>
+                      {gundelikSubcategories.map(cat => <option key={cat.id} value={cat.id}>{cat.name_az}</option>)}
+                    </select>
+                  </div>
                 </div>
 
                 <div className="mb-6">
@@ -559,7 +641,7 @@ export default function PostJobPage() {
                     required
                     disabled={loadingData}
                   >
-                    <option value="">{loadingData ? 'Yüklənir...' : 'Seçin'}</option>
+                    <option value="">{loadingData ? 'Yüklənir...' : 'Şəhər seçin'}</option>
                     {cities.map(city => <option key={city} value={city}>{city}</option>)}
                   </select>
                 </div>
