@@ -300,7 +300,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             <div className="col-span-1">
               <button
                 type="submit"
-                className="w-full px-6 py-3 bg-black text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all"
+                className="w-full px-6 py-3 bg-black text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all flex items-center justify-center"
               >
                 Axtar
               </button>

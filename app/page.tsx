@@ -10,7 +10,7 @@ import { ShortJobCard, ShortJob } from '@/components/short-jobs/ShortJobCard'
 import { BriefcaseIcon, ClockIcon } from '@heroicons/react/24/outline'
 import { signInWithGoogle, getCurrentUser } from '@/lib/auth'
 import { getActiveJobsPaginated, Job as DBJob } from '@/lib/api/jobs'
-import { getCities } from '@/lib/api/categories'
+import { getCities, getParentCategories, Category } from '@/lib/api/categories'
 import { SearchFilters } from '@/components/ui/SearchBar'
 
 export default function HomePage() {
@@ -22,6 +22,8 @@ export default function HomePage() {
   const [allShortJobs, setAllShortJobs] = useState<DBJob[]>([]) // Все gundəlik (для фильтрации)
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [cities, setCities] = useState<string[]>([])
+  const [vakansiyaCategories, setVakansiyaCategories] = useState<Category[]>([])
+  const [gundelikCategories, setGundelikCategories] = useState<Category[]>([])
   const [vakansiyalarPage, setVakansiyalarPage] = useState(1)
   const [gundelikPage, setGundelikPage] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -40,6 +42,13 @@ export default function HomePage() {
     // Загружаем города из БД
     const citiesData = await getCities()
     setCities(citiesData)
+
+    // Загружаем категории из БД
+    const vakansiyaCats = await getParentCategories('vacancy')
+    setVakansiyaCategories(vakansiyaCats)
+
+    const gundelikCats = await getParentCategories('short_job')
+    setGundelikCategories(gundelikCats)
 
     // Загружаем вакансии
     const vakansiyalarResult = await getActiveJobsPaginated({
@@ -208,26 +217,25 @@ export default function HomePage() {
     router.push(`/vakansiyalar/${jobId}`)
   }
 
-  const handleCategorySelect = (category: string) => {
-    setSelectedCategory(category)
+  const handleCategorySelect = (categoryNameAz: string) => {
+    setSelectedCategory(categoryNameAz)
 
-    // Фильтруем по категории
+    // Фильтруем по parent_category_name (название главной категории из БД)
     if (activeTab === 'vakansiyalar') {
-      if (!category) {
+      if (!categoryNameAz) {
         setJobs(allJobs) // Показываем все
       } else {
         const filtered = allJobs.filter(job =>
-          job.category_name?.toLowerCase().includes(category.toLowerCase()) ||
-          job.parent_category_name?.toLowerCase().includes(category.toLowerCase())
+          job.parent_category_name?.toLowerCase() === categoryNameAz.toLowerCase()
         )
         setJobs(filtered)
       }
     } else {
-      if (!category) {
+      if (!categoryNameAz) {
         setShortJobs(allShortJobs) // Показываем все
       } else {
         const filtered = allShortJobs.filter(job =>
-          job.category.toLowerCase().includes(category.toLowerCase())
+          job.parent_category_name?.toLowerCase() === categoryNameAz.toLowerCase()
         )
         setShortJobs(filtered)
       }
@@ -282,6 +290,8 @@ export default function HomePage() {
         activeTab={activeTab}
         selectedCategory={selectedCategory}
         onCategorySelect={handleCategorySelect}
+        vakansiyaCategories={vakansiyaCategories}
+        gundelikCategories={gundelikCategories}
       />
 
       {/* Vakansiyalar - показываем только если выбран таб vakansiyalar */}
