@@ -42,6 +42,7 @@ export type CreateJobData = {
   title: string
   category: string
   location: string
+  work_address?: string
   salary?: string
   description?: string
   company?: string
@@ -53,6 +54,7 @@ export type CreateJobData = {
   benefits?: string
   start_date?: string
   duration?: string
+  contact_name: string
   contact_phone: string
 }
 

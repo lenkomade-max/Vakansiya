@@ -34,6 +34,7 @@ export default function PostJobPage() {
     parentCategory: '', // ID главной категории
     subcategory: '', // ID подкатегории
     location: '',
+    workAddress: '', // Точный адрес работы
     salary: '',
     employmentType: '',
     experience: '',
@@ -42,6 +43,7 @@ export default function PostJobPage() {
     description: '',
     requirements: '',
     benefits: '',
+    contactName: '', // Имя контактного лица
     contactPhone: '',
   })
 
@@ -51,10 +53,13 @@ export default function PostJobPage() {
     parentCategory: '', // ID главной категории
     subcategory: '', // ID подкатегории
     location: '',
+    workAddress: '', // Точный адрес работы
     salary: '',
+    experience: '', // Опыт работы
     startDate: '',
     duration: '',
     description: '',
+    contactName: '', // Имя контактного лица
     phoneNumber: '',
   })
 
@@ -250,6 +255,11 @@ export default function PostJobPage() {
           setIsSubmitting(false)
           return
         }
+        if (!vakansiyaForm.contactName?.trim()) {
+          toast.error('Ad mütləqdir')
+          setIsSubmitting(false)
+          return
+        }
         if (!vakansiyaForm.contactPhone) {
           toast.error('Telefon nömrəsi mütləqdir')
           setIsSubmitting(false)
@@ -269,6 +279,7 @@ export default function PostJobPage() {
           company: vakansiyaForm.company,
           category: vakansiyaForm.subcategory, // Using subcategory ID
           location: vakansiyaForm.location,
+          work_address: vakansiyaForm.workAddress || undefined,
           salary: vakansiyaForm.salary || undefined,
           description: vakansiyaForm.description || undefined,
           employment_type: vakansiyaForm.employmentType || undefined,
@@ -277,6 +288,7 @@ export default function PostJobPage() {
           deadline: vakansiyaForm.deadline || undefined,
           requirements: vakansiyaForm.requirements || undefined,
           benefits: vakansiyaForm.benefits || undefined,
+          contact_name: vakansiyaForm.contactName,
           contact_phone: vakansiyaForm.contactPhone,
         })
 
@@ -328,6 +340,11 @@ export default function PostJobPage() {
           setIsSubmitting(false)
           return
         }
+        if (!gundelikForm.contactName?.trim()) {
+          toast.error('Ad mütləqdir')
+          setIsSubmitting(false)
+          return
+        }
         if (!gundelikForm.phoneNumber) {
           toast.error('Telefon nömrəsi mütləqdir')
           setIsSubmitting(false)
@@ -351,10 +368,13 @@ export default function PostJobPage() {
           title: gundelikForm.title,
           category: gundelikForm.subcategory, // Using subcategory ID
           location: gundelikForm.location,
+          work_address: gundelikForm.workAddress || undefined,
           salary: gundelikForm.salary,
           description: gundelikForm.description || undefined,
+          experience: gundelikForm.experience || undefined,
           start_date: gundelikForm.startDate || undefined,
           duration: gundelikForm.duration || undefined,
+          contact_name: gundelikForm.contactName,
           contact_phone: gundelikForm.phoneNumber,
         })
 
@@ -384,8 +404,8 @@ export default function PostJobPage() {
   }
 
   const employmentTypes = ['Tam ştat', 'Yarım ştat', 'Distant', 'Hibrid', 'Müqavilə əsasında']
-  const experienceLevels = ['Təcrübəsiz', '1 ilə qədər', '1-2 il', '2-3 il', '3-5 il', '5+ il']
-  const educationLevels = ['Orta', 'Orta-ixtisas', 'Natamam ali', 'Ali', 'Magistr', 'Doktorantura']
+  const experienceLevels = ['Təcrübəsiz', '1 ildən aşağı', '1 ildən 3 ilə qədər', '3 ildən 5 ilə qədər', '5 ildən artıq']
+  const educationLevels = ['Elmi dərəcə', 'Ali', 'Natamam ali', 'Orta texniki', 'Orta xüsusi', 'Orta']
   const durations = ['1 gün', '2 gün', '3 gün', '1 həftə', '2 həftə', '1 ay']
 
   return (
@@ -507,20 +527,33 @@ export default function PostJobPage() {
                   </div>
                 </div>
 
-                <div className="mb-6">
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Şəhər <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={vakansiyaForm.location}
-                    onChange={(e) => handleVakansiyaChange('location', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base bg-white"
-                    required
-                    disabled={loadingData}
-                  >
-                    <option value="">{loadingData ? 'Yüklənir...' : 'Şəhər seçin'}</option>
-                    {cities.map(city => <option key={city} value={city}>{city}</option>)}
-                  </select>
+                {/* Şəhər və İş ünvanı grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-black mb-2">
+                      Şəhər <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={vakansiyaForm.location}
+                      onChange={(e) => handleVakansiyaChange('location', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base bg-white"
+                      required
+                      disabled={loadingData}
+                    >
+                      <option value="">{loadingData ? 'Yüklənir...' : 'Şəhər seçin'}</option>
+                      {cities.map(city => <option key={city} value={city}>{city}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-black mb-2">İş ünvanı</label>
+                    <input
+                      type="text"
+                      value={vakansiyaForm.workAddress}
+                      onChange={(e) => handleVakansiyaChange('workAddress', e.target.value)}
+                      placeholder="Məsələn, Nizami metrosu və ya Xətai rayonu"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -548,6 +581,32 @@ export default function PostJobPage() {
                   </div>
                 </div>
 
+                {/* Təhsil və İş təcrübəsi grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-black mb-2">Təhsil</label>
+                    <select
+                      value={vakansiyaForm.education}
+                      onChange={(e) => handleVakansiyaChange('education', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base bg-white"
+                    >
+                      <option value="">Seçin</option>
+                      {educationLevels.map(level => <option key={level} value={level}>{level}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-black mb-2">İş təcrübəsi</label>
+                    <select
+                      value={vakansiyaForm.experience}
+                      onChange={(e) => handleVakansiyaChange('experience', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base bg-white"
+                    >
+                      <option value="">Seçin</option>
+                      {experienceLevels.map(level => <option key={level} value={level}>{level}</option>)}
+                    </select>
+                  </div>
+                </div>
+
                 <div className="mb-6">
                   <label className="block text-sm font-semibold text-black mb-2">Vakansiya təsviri</label>
                   <textarea
@@ -558,22 +617,38 @@ export default function PostJobPage() {
                   />
                 </div>
 
-                <div className="mb-8">
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Telefon <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none font-medium">
-                      +994
-                    </div>
+                {/* Ad və Telefon grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                  <div>
+                    <label className="block text-sm font-semibold text-black mb-2">
+                      Ad <span className="text-red-500">*</span>
+                    </label>
                     <input
-                      type="tel"
-                      value={vakansiyaForm.contactPhone.replace('+994', '').trim()}
-                      onChange={(e) => handleVakansiyaChange('contactPhone', '+994 ' + e.target.value)}
-                      placeholder="50 123 45 67"
-                      className="w-full pl-16 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
+                      type="text"
+                      value={vakansiyaForm.contactName}
+                      onChange={(e) => handleVakansiyaChange('contactName', e.target.value)}
+                      placeholder="Adınız"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
                       required
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-black mb-2">
+                      Telefon <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none font-medium">
+                        +994
+                      </div>
+                      <input
+                        type="tel"
+                        value={vakansiyaForm.contactPhone.replace('+994', '').trim()}
+                        onChange={(e) => handleVakansiyaChange('contactPhone', '+994 ' + e.target.value)}
+                        placeholder="50 123 45 67"
+                        className="w-full pl-16 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
+                        required
+                      />
+                    </div>
                   </div>
                 </div>
               </>
@@ -630,34 +705,61 @@ export default function PostJobPage() {
                   </div>
                 </div>
 
-                <div className="mb-6">
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Şəhər <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={gundelikForm.location}
-                    onChange={(e) => handleGundelikChange('location', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base bg-white"
-                    required
-                    disabled={loadingData}
-                  >
-                    <option value="">{loadingData ? 'Yüklənir...' : 'Şəhər seçin'}</option>
-                    {cities.map(city => <option key={city} value={city}>{city}</option>)}
-                  </select>
+                {/* Şəhər və İş ünvanı grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-black mb-2">
+                      Şəhər <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={gundelikForm.location}
+                      onChange={(e) => handleGundelikChange('location', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base bg-white"
+                      required
+                      disabled={loadingData}
+                    >
+                      <option value="">{loadingData ? 'Yüklənir...' : 'Şəhər seçin'}</option>
+                      {cities.map(city => <option key={city} value={city}>{city}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-black mb-2">İş ünvanı</label>
+                    <input
+                      type="text"
+                      value={gundelikForm.workAddress}
+                      onChange={(e) => handleGundelikChange('workAddress', e.target.value)}
+                      placeholder="Məsələn, Nizami metrosu və ya Xətai rayonu"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
+                    />
+                  </div>
                 </div>
 
-                <div className="mb-6">
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Əmək haqqı <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={gundelikForm.salary}
-                    onChange={(e) => handleGundelikChange('salary', e.target.value)}
-                    placeholder="80 AZN/gün"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
-                    required
-                  />
+                {/* Əmək haqqı və İş təcrübəsi grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-black mb-2">
+                      Əmək haqqı <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={gundelikForm.salary}
+                      onChange={(e) => handleGundelikChange('salary', e.target.value)}
+                      placeholder="80 AZN/gün"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-black mb-2">İş təcrübəsi</label>
+                    <select
+                      value={gundelikForm.experience}
+                      onChange={(e) => handleGundelikChange('experience', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base bg-white"
+                    >
+                      <option value="">Seçin</option>
+                      {experienceLevels.map(level => <option key={level} value={level}>{level}</option>)}
+                    </select>
+                  </div>
                 </div>
 
                 <div className="mb-6">
@@ -749,24 +851,40 @@ export default function PostJobPage() {
                   />
                 </div>
 
-                <div className="mb-8">
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Telefon <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none font-medium">
-                      +994
-                    </div>
+                {/* Ad və Telefon grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                  <div>
+                    <label className="block text-sm font-semibold text-black mb-2">
+                      Ad <span className="text-red-500">*</span>
+                    </label>
                     <input
-                      type="tel"
-                      value={gundelikForm.phoneNumber.replace('+994', '').trim()}
-                      onChange={(e) => handleGundelikChange('phoneNumber', '+994 ' + e.target.value)}
-                      placeholder="50 123 45 67"
-                      className="w-full pl-16 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
+                      type="text"
+                      value={gundelikForm.contactName}
+                      onChange={(e) => handleGundelikChange('contactName', e.target.value)}
+                      placeholder="Adınız"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
                       required
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Telefon gizli olacaq</p>
+                  <div>
+                    <label className="block text-sm font-semibold text-black mb-2">
+                      Telefon <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none font-medium">
+                        +994
+                      </div>
+                      <input
+                        type="tel"
+                        value={gundelikForm.phoneNumber.replace('+994', '').trim()}
+                        onChange={(e) => handleGundelikChange('phoneNumber', '+994 ' + e.target.value)}
+                        placeholder="50 123 45 67"
+                        className="w-full pl-16 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
+                        required
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Telefon gizli olacaq</p>
+                  </div>
                 </div>
               </>
             )}
