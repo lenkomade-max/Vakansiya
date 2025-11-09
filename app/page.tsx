@@ -10,6 +10,7 @@ import { ShortJobCard, ShortJob } from '@/components/short-jobs/ShortJobCard'
 import { BriefcaseIcon, ClockIcon } from '@heroicons/react/24/outline'
 import { signInWithGoogle, getCurrentUser } from '@/lib/auth'
 import { getActiveJobsPaginated, Job as DBJob } from '@/lib/api/jobs'
+import { getCities } from '@/lib/api/categories'
 import { SearchFilters } from '@/components/ui/SearchBar'
 
 export default function HomePage() {
@@ -20,6 +21,7 @@ export default function HomePage() {
   const [allJobs, setAllJobs] = useState<DBJob[]>([]) // Все вакансии (для фильтрации)
   const [allShortJobs, setAllShortJobs] = useState<DBJob[]>([]) // Все gundəlik (для фильтрации)
   const [selectedCategory, setSelectedCategory] = useState<string>('')
+  const [cities, setCities] = useState<string[]>([])
   const [vakansiyalarPage, setVakansiyalarPage] = useState(1)
   const [gundelikPage, setGundelikPage] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -34,6 +36,10 @@ export default function HomePage() {
 
   const loadInitialData = async () => {
     setLoading(true)
+
+    // Загружаем города из БД
+    const citiesData = await getCities()
+    setCities(citiesData)
 
     // Загружаем вакансии
     const vakansiyalarResult = await getActiveJobsPaginated({
@@ -123,7 +129,7 @@ export default function HomePage() {
     // Фильтруем вакансии на клиенте
     setLoading(true)
 
-    let filtered = activeTab === 'vakansiyalar' ? [...jobs] : [...shortJobs]
+    let filtered = activeTab === 'vakansiyalar' ? [...allJobs] : [...allShortJobs]
 
     // Фильтр по тексту (поиск в title, company, description)
     if (filters.query) {
@@ -142,23 +148,21 @@ export default function HomePage() {
       )
     }
 
-    // Фильтр по зарплате
-    if (filters.salary) {
+    // Фильтр по зарплате (min/max)
+    if (filters.salaryMin || filters.salaryMax) {
       filtered = filtered.filter(job => {
         if (!job.salary) return false
-        const salary = job.salary.toLowerCase()
 
-        if (filters.salary === '500-1000') {
-          return salary.includes('500') || salary.includes('600') || salary.includes('700') ||
-                 salary.includes('800') || salary.includes('900') || salary.includes('1000')
-        } else if (filters.salary === '1000-2000') {
-          return salary.includes('1000') || salary.includes('1500') || salary.includes('2000')
-        } else if (filters.salary === '2000-3000') {
-          return salary.includes('2000') || salary.includes('2500') || salary.includes('3000')
-        } else if (filters.salary === '3000+') {
-          return salary.includes('3000') || salary.includes('4000') || salary.includes('5000') ||
-                 salary.includes('6000') || salary.includes('7000') || salary.includes('8000')
-        }
+        // Извлекаем числа из строки зарплаты
+        const salaryNumbers = job.salary.match(/\d+/g)
+        if (!salaryNumbers || salaryNumbers.length === 0) return false
+
+        const jobSalary = parseInt(salaryNumbers[0])
+
+        // Проверяем диапазон
+        if (filters.salaryMin && jobSalary < filters.salaryMin) return false
+        if (filters.salaryMax && jobSalary > filters.salaryMax) return false
+
         return true
       })
     }
@@ -243,7 +247,7 @@ export default function HomePage() {
       <section className="bg-white py-6 md:py-10">
         <div className="container mx-auto px-4 max-w-7xl">
           {/* Поиск */}
-          <SearchBar onSearch={handleSearch} />
+          <SearchBar onSearch={handleSearch} cities={cities} />
 
           {/* Табы - переключение между Vakansiyalar и Gündəlik işlər */}
           <div className="mt-6 flex items-center gap-2 bg-gray-100 p-1 rounded-xl max-w-md mx-auto">

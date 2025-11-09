@@ -1,18 +1,20 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
 export interface SearchBarProps {
   onSearch: (filters: SearchFilters) => void
   placeholder?: string
+  cities?: string[] // Города из БД
 }
 
 export interface SearchFilters {
   query: string
   location: string
   category: string
-  salary?: string
+  salaryMin?: number
+  salaryMax?: number
   employmentType?: string
   experience?: string
 }
@@ -20,11 +22,13 @@ export interface SearchFilters {
 export const SearchBar: React.FC<SearchBarProps> = ({
   onSearch,
   placeholder = 'Vəzifə, açar söz...',
+  cities = [],
 }) => {
   const [query, setQuery] = useState('')
   const [location, setLocation] = useState('')
   const [category, setCategory] = useState('')
-  const [salary, setSalary] = useState('')
+  const [salaryMin, setSalaryMin] = useState('')
+  const [salaryMax, setSalaryMax] = useState('')
   const [employmentType, setEmploymentType] = useState('')
   const [experience, setExperience] = useState('')
   const [showAdvanced, setShowAdvanced] = useState(false)
@@ -35,7 +39,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       query,
       location,
       category,
-      salary,
+      salaryMin: salaryMin ? parseInt(salaryMin) : undefined,
+      salaryMax: salaryMax ? parseInt(salaryMax) : undefined,
       employmentType,
       experience,
     })
@@ -45,17 +50,44 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     setQuery('')
     setLocation('')
     setCategory('')
-    setSalary('')
+    setSalaryMin('')
+    setSalaryMax('')
     setEmploymentType('')
     setExperience('')
     onSearch({
       query: '',
       location: '',
       category: '',
-      salary: '',
+      salaryMin: undefined,
+      salaryMax: undefined,
       employmentType: '',
       experience: '',
     })
+  }
+
+  // Подсчет активных фильтров
+  const activeFiltersCount = [
+    query,
+    location,
+    salaryMin,
+    salaryMax,
+    employmentType,
+    experience
+  ].filter(Boolean).length
+
+  // Формирование текста активных фильтров
+  const getActiveFiltersText = () => {
+    const filters = []
+    if (query) filters.push(`"${query}"`)
+    if (location) filters.push(location)
+    if (salaryMin || salaryMax) {
+      if (salaryMin && salaryMax) filters.push(`${salaryMin}-${salaryMax} AZN`)
+      else if (salaryMin) filters.push(`${salaryMin}+ AZN`)
+      else if (salaryMax) filters.push(`${salaryMax}- AZN`)
+    }
+    if (employmentType) filters.push(employmentType)
+    if (experience) filters.push(experience)
+    return filters
   }
 
   return (
@@ -80,19 +112,38 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className={`px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+              className={`relative px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
                 showAdvanced
                   ? 'bg-gray-800 text-white'
                   : 'bg-black text-white hover:bg-gray-800'
               }`}
             >
               <AdjustmentsHorizontalIcon className="w-5 h-5" />
+              {activeFiltersCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                  {activeFiltersCount}
+                </span>
+              )}
             </button>
           </div>
 
+          {/* Активные фильтры (чипы) */}
+          {activeFiltersCount > 0 && !showAdvanced && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {getActiveFiltersText().map((filter, idx) => (
+                <span
+                  key={idx}
+                  className="px-3 py-1 bg-black text-white text-xs rounded-full"
+                >
+                  {filter}
+                </span>
+              ))}
+            </div>
+          )}
+
           {/* Расширенный поиск (выдвижная панель) */}
           {showAdvanced && (
-            <div className="mt-3 bg-white rounded-xl border border-gray-200 p-4 space-y-3 animate-in slide-in-from-top">
+            <div className="mt-3 bg-white rounded-xl border border-gray-200 p-4 space-y-3">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold text-sm">Ətraflı axtarış</h3>
                 <button
@@ -113,31 +164,31 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
                 >
                   <option value="">Hamısı</option>
-                  <option value="Bakı">Bakı</option>
-                  <option value="Gəncə">Gəncə</option>
-                  <option value="Sumqayıt">Sumqayıt</option>
-                  <option value="Mingəçevir">Mingəçevir</option>
-                  <option value="Lənkəran">Lənkəran</option>
-                  <option value="Şəki">Şəki</option>
-                  <option value="Naxçıvan">Naxçıvan</option>
-                  <option value="Distant">Distant</option>
+                  {cities.map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
                 </select>
               </div>
 
-              {/* Зарплата */}
+              {/* Зарплата (min/max) */}
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Maaş</label>
-                <select
-                  value={salary}
-                  onChange={(e) => setSalary(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
-                >
-                  <option value="">Hamısı</option>
-                  <option value="500-1000">500-1000 AZN</option>
-                  <option value="1000-2000">1000-2000 AZN</option>
-                  <option value="2000-3000">2000-3000 AZN</option>
-                  <option value="3000+">3000+ AZN</option>
-                </select>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Maaş (AZN)</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="number"
+                    value={salaryMin}
+                    onChange={(e) => setSalaryMin(e.target.value)}
+                    placeholder="Min"
+                    className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                  />
+                  <input
+                    type="number"
+                    value={salaryMax}
+                    onChange={(e) => setSalaryMax(e.target.value)}
+                    placeholder="Max"
+                    className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                  />
+                </div>
               </div>
 
               {/* Тип занятости */}
@@ -198,7 +249,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           {/* Основная строка поиска */}
           <div className="grid grid-cols-12 gap-3 mb-4">
             {/* Поиск по ключевым словам */}
-            <div className="col-span-5 relative">
+            <div className="col-span-4 relative">
               <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
@@ -217,34 +268,36 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black appearance-none bg-white"
               >
                 <option value="">Bütün şəhərlər</option>
-                <option value="Bakı">Bakı</option>
-                <option value="Gəncə">Gəncə</option>
-                <option value="Sumqayıt">Sumqayıt</option>
-                <option value="Mingəçevir">Mingəçevir</option>
-                <option value="Lənkəran">Lənkəran</option>
-                <option value="Şəki">Şəki</option>
-                <option value="Naxçıvan">Naxçıvan</option>
-                <option value="Distant">Distant</option>
+                {cities.map(city => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
               </select>
             </div>
 
-            {/* Зарплата */}
+            {/* Зарплата Min */}
             <div className="col-span-2">
-              <select
-                value={salary}
-                onChange={(e) => setSalary(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black appearance-none bg-white"
-              >
-                <option value="">Maaş</option>
-                <option value="500-1000">500-1000</option>
-                <option value="1000-2000">1000-2000</option>
-                <option value="2000-3000">2000-3000</option>
-                <option value="3000+">3000+</option>
-              </select>
+              <input
+                type="number"
+                value={salaryMin}
+                onChange={(e) => setSalaryMin(e.target.value)}
+                placeholder="Min maaş"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              />
+            </div>
+
+            {/* Зарплата Max */}
+            <div className="col-span-2">
+              <input
+                type="number"
+                value={salaryMax}
+                onChange={(e) => setSalaryMax(e.target.value)}
+                placeholder="Max maaş"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              />
             </div>
 
             {/* Кнопка поиска */}
-            <div className="col-span-2">
+            <div className="col-span-1">
               <button
                 type="submit"
                 className="w-full px-6 py-3 bg-black text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all"
@@ -285,29 +338,17 @@ export const SearchBar: React.FC<SearchBarProps> = ({
               <option value="5 ildən artıq">5+ il</option>
             </select>
 
-            {/* Быстрые фильтры */}
+            {/* Активные фильтры и кнопка очистки */}
             <div className="flex-1 flex items-center gap-2 justify-end">
-              <button
-                type="button"
-                onClick={() => {
-                  setLocation('Distant')
-                  onSearch({ query, location: 'Distant', category, salary, employmentType, experience })
-                }}
-                className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-medium hover:bg-green-100 transition-all"
-              >
-                Distant işlər
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setExperience('Təcrübəsiz')
-                  onSearch({ query, location, category, salary, employmentType, experience: 'Təcrübəsiz' })
-                }}
-                className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-100 transition-all"
-              >
-                Təcrübəsiz
-              </button>
-              {(query || location || salary || employmentType || experience) && (
+              {getActiveFiltersText().map((filter, idx) => (
+                <span
+                  key={idx}
+                  className="px-3 py-1.5 bg-black text-white rounded-lg text-xs font-medium"
+                >
+                  {filter}
+                </span>
+              ))}
+              {activeFiltersCount > 0 && (
                 <button
                   type="button"
                   onClick={handleClear}
