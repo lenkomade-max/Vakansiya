@@ -307,3 +307,56 @@ export async function getActiveJobs(jobType?: JobType): Promise<Job[]> {
 
   return data || []
 }
+
+/**
+ * Get active jobs with pagination and filters
+ */
+export async function getActiveJobsPaginated(params: {
+  jobType?: JobType
+  category?: string
+  location?: string
+  page?: number
+  limit?: number
+}): Promise<{ jobs: Job[]; total: number; hasMore: boolean }> {
+  const supabase = await createClient()
+  const { jobType, category, location, page = 1, limit = 20 } = params
+
+  // Calculate offset
+  const offset = (page - 1) * limit
+
+  // Build query
+  let query = supabase
+    .from('jobs')
+    .select('*', { count: 'exact' })
+    .eq('status', 'active')
+
+  // Apply filters
+  if (jobType) {
+    query = query.eq('job_type', jobType)
+  }
+  if (category) {
+    query = query.eq('category', category)
+  }
+  if (location) {
+    query = query.ilike('location', `%${location}%`)
+  }
+
+  // Add pagination and ordering
+  query = query
+    .order('is_vip', { ascending: false })
+    .order('is_urgent', { ascending: false })
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1)
+
+  const { data, error, count } = await query
+
+  if (error) {
+    console.error('Error fetching paginated jobs:', error)
+    return { jobs: [], total: 0, hasMore: false }
+  }
+
+  const total = count || 0
+  const hasMore = offset + limit < total
+
+  return { jobs: data || [], total, hasMore }
+}

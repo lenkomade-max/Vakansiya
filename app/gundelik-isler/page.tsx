@@ -7,71 +7,46 @@ import { ShortJobCard, ShortJob } from '@/components/short-jobs/ShortJobCard'
 import { CategoryGrid, ShortJobCategory } from '@/components/short-jobs/CategoryIcons'
 import FilterModal, { FilterOptions } from '@/components/ui/FilterModal'
 import { FunnelIcon } from '@heroicons/react/24/outline'
+import { getActiveJobsPaginated, Job as DBJob } from '@/lib/api/jobs'
 
 export default function GundelikIslerPage() {
   const router = useRouter()
-  const [jobs, setJobs] = useState<ShortJob[]>([])
+  const [jobs, setJobs] = useState<DBJob[]>([])
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<ShortJobCategory | null>(null)
   const [filters, setFilters] = useState<FilterOptions>({})
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
   const observerTarget = useRef(null)
 
-  // Генерируем fake данные для демо коротких работ
-  const generateShortJobs = (startId: number, count: number): ShortJob[] => {
-    const categories: ShortJobCategory[] = [
-      'transport', 'construction', 'cleaning', 'garden',
-      'restaurant', 'events', 'warehouse', 'office',
-      'creative', 'services'
-    ]
-
-    const titlesByCategory: Record<ShortJobCategory, string[]> = {
-      transport: ['Taksi sürücüsü', 'Kuryer', 'Yük daşıma sürücüsü', 'Moped kuryer'],
-      construction: ['Bənna', 'Dülgər', 'Elektrik', 'Santexnik', 'Malyar'],
-      cleaning: ['Ofis təmizliyi', 'Mənzil təmizliyi', 'Binaya xidmət', 'Pəncərə təmizləmə'],
-      garden: ['Bağban', 'Ağac budama', 'Həyət təmizliyi', 'Çiçək əkimi'],
-      restaurant: ['Ofisiant', 'Aşpaz köməkçisi', 'Qabları yuma', 'Çatdırılma kuryer'],
-      events: ['Promouşn işçisi', 'Həftəsonu köməkçi', 'Anket aparıcı', 'Məhsul nümayişi'],
-      warehouse: ['Anbar işçisi', 'Yükdaşıma', 'Sortirovka', 'Paket yığma'],
-      office: ['Sənəd daşıma', 'Ofis köməkçisi', 'Resepşn əvəzi', 'Arxiv tərtibatı'],
-      creative: ['Fotoqraf', 'Video operator', 'Qrafik dizayner', 'Tərcüməçi'],
-      services: ['Təmir ustası', 'Kondisioner təmiri', 'Kompüter təmiri', 'Mebel yığılması']
-    }
-
-    const locations = ['Bakı, Nəsimi', 'Bakı, Nərimanov', 'Bakı, Yasamal', 'Bakı, Xətai', 'Bakı, Səbail', 'Bakı, Nizami']
-    const startDates = ['Bu gün', 'Sabah', '3 Noyabr', '4 Noyabr', '5 Noyabr', '8 Noyabr']
-    const durations = ['1 gün', '2 gün', '3 gün', '1 həftə', '2 həftə']
-
-    return Array.from({ length: count }, (_, i) => {
-      const id = startId + i
-      const category = categories[id % categories.length]
-      const titles = titlesByCategory[category]
-
-      return {
-        id: `short-job-${id}`,
-        title: titles[id % titles.length],
-        category,
-        location: locations[id % locations.length],
-        salary: `${50 + (id % 10) * 20} AZN/gün`, // ОБЯЗАТЕЛЬНОЕ поле!
-        startDate: startDates[id % startDates.length],
-        duration: id % 3 === 0 ? durations[id % durations.length] : undefined,
-        isVIP: id % 8 === 0,
-        isUrgent: id % 12 === 0,
-      }
-    })
-  }
-
-  // Загружаем initial jobs
+  // Загружаем initial jobs из БД
   useEffect(() => {
-    setJobs(generateShortJobs(0, 20))
-  }, [])
+    loadInitialData()
+  }, [selectedCategory, filters])
+
+  const loadInitialData = async () => {
+    setLoading(true)
+    setPage(1)
+
+    const result = await getActiveJobsPaginated({
+      jobType: 'gundelik',
+      category: selectedCategory || undefined,
+      location: filters.location,
+      page: 1,
+      limit: 20
+    })
+
+    setJobs(result.jobs)
+    setHasMore(result.hasMore)
+    setLoading(false)
+  }
 
   // Infinite scroll с Intersection Observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !loading) {
+        if (entries[0].isIntersecting && !loading && hasMore) {
           loadMore()
         }
       },
@@ -87,20 +62,26 @@ export default function GundelikIslerPage() {
         observer.unobserve(observerTarget.current)
       }
     }
-  }, [loading, page])
+  }, [loading, hasMore])
 
-  const loadMore = () => {
-    if (loading) return
+  const loadMore = async () => {
+    if (loading || !hasMore) return
 
     setLoading(true)
 
-    // Simulate API delay
-    setTimeout(() => {
-      const newJobs = generateShortJobs(page * 20, 20)
-      setJobs((prev) => [...prev, ...newJobs])
-      setPage((prev) => prev + 1)
-      setLoading(false)
-    }, 500)
+    const nextPage = page + 1
+    const result = await getActiveJobsPaginated({
+      jobType: 'gundelik',
+      category: selectedCategory || undefined,
+      location: filters.location,
+      page: nextPage,
+      limit: 20
+    })
+
+    setJobs((prev) => [...prev, ...result.jobs])
+    setPage(nextPage)
+    setHasMore(result.hasMore)
+    setLoading(false)
   }
 
   const handleLogin = () => {
@@ -118,42 +99,7 @@ export default function GundelikIslerPage() {
 
   const handleFilterApply = (newFilters: FilterOptions) => {
     setFilters(newFilters)
-    console.log('Применены фильтры:', newFilters)
   }
-
-  // Фильтруем работы по всем параметрам
-  const filteredJobs = jobs.filter(job => {
-    // Фильтр по категории
-    if (selectedCategory && job.category !== selectedCategory) {
-      return false
-    }
-
-    // Фильтр по городу
-    if (filters.location && job.location !== filters.location) {
-      return false
-    }
-
-    // Фильтр по дате начала
-    if (filters.startDate && job.startDate !== filters.startDate) {
-      return false
-    }
-
-    // Фильтр по зарплате (парсим значение из строки типа "80 AZN/gün")
-    if (filters.minSalary || filters.maxSalary) {
-      const salaryMatch = job.salary.match(/(\d+)/)
-      if (salaryMatch) {
-        const salary = parseInt(salaryMatch[1])
-        if (filters.minSalary && salary < filters.minSalary) {
-          return false
-        }
-        if (filters.maxSalary && salary > filters.maxSalary) {
-          return false
-        }
-      }
-    }
-
-    return true
-  })
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -214,13 +160,24 @@ export default function GundelikIslerPage() {
             <h2 className="text-xl md:text-3xl font-bold text-black">
               {selectedCategory ? 'Seçilmiş kateqoriya' : 'Bütün işlər'}
             </h2>
-            <span className="text-xs md:text-sm text-gray-600">{filteredJobs.length} iş</span>
+            <span className="text-xs md:text-sm text-gray-600">{jobs.length} iş</span>
           </div>
 
           {/* СЕТКА: 2 колонки на мобилке, 3-4 на десктопе */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
-            {filteredJobs.map((job) => (
-              <ShortJobCard key={job.id} {...job} />
+            {jobs.map((job) => (
+              <ShortJobCard
+                key={job.id}
+                id={job.id}
+                title={job.title}
+                category={job.category as any}
+                location={job.location}
+                salary={job.salary || ''}
+                startDate={job.start_date || ''}
+                duration={job.duration}
+                isVIP={job.is_vip}
+                isUrgent={job.is_urgent}
+              />
             ))}
           </div>
 

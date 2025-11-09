@@ -6,27 +6,16 @@ import Navigation from '@/components/ui/Navigation'
 import JobCard from '@/components/job/JobCard'
 import FilterModal, { FilterOptions } from '@/components/ui/FilterModal'
 import { FunnelIcon, BriefcaseIcon } from '@heroicons/react/24/outline'
+import { getActiveJobsPaginated, Job as DBJob } from '@/lib/api/jobs'
 
 type JobCategory = 'it' | 'marketing' | 'design' | 'sales' | 'management' | 'finance' | 'hr' | 'other'
 
-interface Job {
-  id: string
-  title: string
-  company: string
-  location: string
-  salary?: string
-  postedAt: string
-  category: JobCategory
-  isRemote?: boolean
-  isVIP?: boolean
-  isUrgent?: boolean
-}
-
 export default function VakansiyalarPage() {
   const router = useRouter()
-  const [jobs, setJobs] = useState<Job[]>([])
+  const [jobs, setJobs] = useState<DBJob[]>([])
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<JobCategory | null>(null)
   const [filters, setFilters] = useState<FilterOptions>({})
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
@@ -43,55 +32,33 @@ export default function VakansiyalarPage() {
     { id: 'other', name: 'Other', nameAz: 'Digər' },
   ]
 
-  // Генерируем fake данные для демо вакансий
-  const generateJobs = (startId: number, count: number): Job[] => {
-    const companies = ['ABC Tech', 'MediaPro MMC', 'DesignHub', 'BakıBank', 'AzTelecom', 'ModaStyle', 'TechSolutions', 'Creative Agency']
-    const titlesByCategory: Record<JobCategory, string[]> = {
-      it: ['Frontend Developer', 'Backend Developer', 'Full Stack Developer', 'Mobile Developer', 'DevOps Engineer', 'QA Engineer'],
-      marketing: ['Marketing Manager', 'SMM Manager', 'Content Manager', 'SEO Specialist', 'Brand Manager'],
-      design: ['UX/UI Designer', 'Graphic Designer', 'Motion Designer', 'Product Designer', 'Web Designer'],
-      sales: ['Sales Manager', 'Account Manager', 'Business Development', 'Sales Representative'],
-      management: ['Product Manager', 'Project Manager', 'Team Lead', 'Operations Manager'],
-      finance: ['Accountant', 'Financial Analyst', 'Finance Manager', 'Auditor'],
-      hr: ['HR Manager', 'Recruiter', 'HR Specialist', 'Talent Acquisition'],
-      other: ['Office Manager', 'Assistant', 'Administrator', 'Coordinator']
-    }
-
-    const locations = ['Bakı, Nəsimi', 'Bakı, Nərimanov', 'Bakı, Yasamal', 'Bakı, Xətai', 'Bakı, Səbail', 'Bakı, Nizami']
-    const times = ['2 saat əvvəl', '5 saat əvvəl', '1 gün əvvəl', '2 gün əvvəl', '3 gün əvvəl']
-
-    const cats: JobCategory[] = ['it', 'marketing', 'design', 'sales', 'management', 'finance', 'hr', 'other']
-
-    return Array.from({ length: count }, (_, i) => {
-      const id = startId + i
-      const category = cats[id % cats.length]
-      const titles = titlesByCategory[category]
-
-      return {
-        id: `job-${id}`,
-        title: titles[id % titles.length],
-        company: companies[id % companies.length],
-        location: locations[id % locations.length],
-        salary: id % 3 === 0 ? `${1000 + (id % 5) * 500}-${2000 + (id % 5) * 500} AZN` : undefined,
-        postedAt: times[id % times.length],
-        category,
-        isRemote: id % 4 === 0,
-        isVIP: id % 7 === 0,
-        isUrgent: id % 11 === 0,
-      }
-    })
-  }
-
-  // Загружаем initial jobs
+  // Загружаем initial jobs из БД
   useEffect(() => {
-    setJobs(generateJobs(0, 20))
-  }, [])
+    loadInitialData()
+  }, [selectedCategory, filters])
+
+  const loadInitialData = async () => {
+    setLoading(true)
+    setPage(1)
+
+    const result = await getActiveJobsPaginated({
+      jobType: 'vakansiya',
+      category: selectedCategory || undefined,
+      location: filters.location,
+      page: 1,
+      limit: 20
+    })
+
+    setJobs(result.jobs)
+    setHasMore(result.hasMore)
+    setLoading(false)
+  }
 
   // Infinite scroll с Intersection Observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !loading) {
+        if (entries[0].isIntersecting && !loading && hasMore) {
           loadMore()
         }
       },
@@ -107,19 +74,26 @@ export default function VakansiyalarPage() {
         observer.unobserve(observerTarget.current)
       }
     }
-  }, [loading, page])
+  }, [loading, hasMore])
 
-  const loadMore = () => {
-    if (loading) return
+  const loadMore = async () => {
+    if (loading || !hasMore) return
 
     setLoading(true)
 
-    setTimeout(() => {
-      const newJobs = generateJobs(page * 20, 20)
-      setJobs((prev) => [...prev, ...newJobs])
-      setPage((prev) => prev + 1)
-      setLoading(false)
-    }, 500)
+    const nextPage = page + 1
+    const result = await getActiveJobsPaginated({
+      jobType: 'vakansiya',
+      category: selectedCategory || undefined,
+      location: filters.location,
+      page: nextPage,
+      limit: 20
+    })
+
+    setJobs((prev) => [...prev, ...result.jobs])
+    setPage(nextPage)
+    setHasMore(result.hasMore)
+    setLoading(false)
   }
 
   const handleLogin = () => {
@@ -141,36 +115,6 @@ export default function VakansiyalarPage() {
   const handleApply = (jobId: string) => {
     router.push(`/vakansiyalar/${jobId}`)
   }
-
-  // Фильтруем работы по всем параметрам
-  const filteredJobs = jobs.filter(job => {
-    if (selectedCategory && job.category !== selectedCategory) {
-      return false
-    }
-
-    if (filters.location && job.location !== filters.location) {
-      return false
-    }
-
-    if (filters.minSalary || filters.maxSalary) {
-      if (!job.salary) return false
-      const salaryMatch = job.salary.match(/(\d+)-(\d+)/)
-      if (salaryMatch) {
-        const minSalary = parseInt(salaryMatch[1])
-        const maxSalary = parseInt(salaryMatch[2])
-        const avgSalary = (minSalary + maxSalary) / 2
-
-        if (filters.minSalary && avgSalary < filters.minSalary) {
-          return false
-        }
-        if (filters.maxSalary && avgSalary > filters.maxSalary) {
-          return false
-        }
-      }
-    }
-
-    return true
-  })
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -245,15 +189,24 @@ export default function VakansiyalarPage() {
             <h2 className="text-xl md:text-3xl font-bold text-black">
               {selectedCategory ? categories.find(c => c.id === selectedCategory)?.nameAz : 'Bütün vakansiyalar'}
             </h2>
-            <span className="text-xs md:text-sm text-gray-600">{filteredJobs.length} vakansiya</span>
+            <span className="text-xs md:text-sm text-gray-600">{jobs.length} vakansiya</span>
           </div>
 
           {/* СЕТКА: 2 колонки на мобилке, 3-4 на десктопе */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
-            {filteredJobs.map((job) => (
+            {jobs.map((job) => (
               <JobCard
                 key={job.id}
-                {...job}
+                id={job.id}
+                title={job.title}
+                company={job.company || ''}
+                location={job.location}
+                salary={job.salary}
+                postedAt={new Date(job.created_at).toLocaleDateString('az-AZ')}
+                category={job.category as any}
+                isRemote={job.location.toLowerCase().includes('distant') || job.location.toLowerCase().includes('uzaqdan')}
+                isVIP={job.is_vip}
+                isUrgent={job.is_urgent}
                 onApply={() => handleApply(job.id)}
               />
             ))}

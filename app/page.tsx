@@ -8,84 +8,46 @@ import JobCard from '@/components/job/JobCard'
 import { ShortJobCard, ShortJob } from '@/components/short-jobs/ShortJobCard'
 import { BriefcaseIcon, ClockIcon } from '@heroicons/react/24/outline'
 import { signInWithGoogle, getCurrentUser } from '@/lib/auth'
+import { getActiveJobsPaginated, Job as DBJob } from '@/lib/api/jobs'
 
 export default function HomePage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'vakansiyalar' | 'gundelik'>('vakansiyalar')
-  const [jobs, setJobs] = useState<any[]>([])
-  const [shortJobs, setShortJobs] = useState<ShortJob[]>([])
-  const [page, setPage] = useState(1)
+  const [jobs, setJobs] = useState<DBJob[]>([])
+  const [shortJobs, setShortJobs] = useState<DBJob[]>([])
+  const [vakansiyalarPage, setVakansiyalarPage] = useState(1)
+  const [gundelikPage, setGundelikPage] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const observerTarget = useRef(null)
 
-  // Генерируем fake данные для демо
-  const generateJobs = (startId: number, count: number) => {
-    const companies = ['ABC Tech', 'MediaPro MMC', 'DesignHub', 'BakıBank', 'AzTelecom', 'ModaStyle']
-    const titles = ['Frontend Developer', 'Backend Developer', 'UX/UI Designer', 'Content Manager', 'Marketing Manager', 'Sales Manager', 'Product Manager', 'HR Manager']
-    const locations = ['Bakı', 'Bakı, Nəsimi', 'Bakı, Nərimanov', 'Sumqayıt', 'Gəncə', 'Distant']
-    const categories = ['it', 'marketing', 'design', 'sales', 'management'] as const
-    const times = ['2 saat əvvəl', '5 saat əvvəl', '1 gün əvvəl', '2 gün əvvəl', '3 gün əvvəl']
-
-    return Array.from({ length: count }, (_, i) => {
-      const id = startId + i
-      return {
-        id: `job-${id}`,
-        title: titles[id % titles.length],
-        company: companies[id % companies.length],
-        location: locations[id % locations.length],
-        salary: id % 3 === 0 ? `${1000 + (id % 5) * 500}-${2000 + (id % 5) * 500} AZN` : undefined,
-        postedAt: times[id % times.length],
-        category: categories[id % categories.length],
-        isRemote: id % 4 === 0,
-        isVIP: id % 7 === 0,
-        isUrgent: id % 11 === 0,
-      }
-    })
-  }
-
-  // Генерируем fake данные для коротких работ
-  const generateShortJobs = (startId: number, count: number): ShortJob[] => {
-    const categories: any[] = ['transport', 'construction', 'cleaning', 'garden', 'restaurant', 'events', 'warehouse', 'office', 'creative', 'services']
-    const titles: Record<string, string[]> = {
-      transport: ['Taksi sürücüsü', 'Kuryer', 'Yük daşıma'],
-      construction: ['Bənna', 'Dülgər', 'Elektrik', 'Santexnik'],
-      cleaning: ['Ofis təmizliyi', 'Mənzil təmizliyi'],
-      garden: ['Bağban', 'Ağac budama'],
-      restaurant: ['Ofisiant', 'Aşpaz köməkçisi'],
-      events: ['Promouşn işçisi', 'Anket aparıcı'],
-      warehouse: ['Anbar işçisi', 'Yükdaşıma'],
-      office: ['Sənəd daşıma', 'Ofis köməkçisi'],
-      creative: ['Fotoqraf', 'Video operator'],
-      services: ['Təmir ustası', 'Mebel yığılması']
-    }
-    const locations = ['Bakı, Nəsimi', 'Bakı, Nərimanov', 'Bakı, Yasamal']
-    const startDates = ['Bu gün', 'Sabah', '3 Noyabr']
-
-    return Array.from({ length: count }, (_, i) => {
-      const id = startId + i
-      const category = categories[id % categories.length]
-      const categoryTitles = titles[category] || ['İş']
-
-      return {
-        id: `short-job-${id}`,
-        title: categoryTitles[id % categoryTitles.length],
-        category,
-        location: locations[id % locations.length],
-        salary: `${50 + (id % 10) * 20} AZN/gün`,
-        startDate: startDates[id % startDates.length],
-        duration: id % 3 === 0 ? `${1 + (id % 3)} gün` : undefined,
-        isVIP: id % 8 === 0,
-        isUrgent: id % 12 === 0,
-      }
-    })
-  }
-
-  // Загружаем initial jobs
+  // Загружаем initial jobs из БД
   useEffect(() => {
-    setJobs(generateJobs(0, 20))
-    setShortJobs(generateShortJobs(0, 8))
+    loadInitialData()
   }, [])
+
+  const loadInitialData = async () => {
+    setLoading(true)
+
+    // Загружаем вакансии
+    const vakansiyalarResult = await getActiveJobsPaginated({
+      jobType: 'vakansiya',
+      page: 1,
+      limit: 20
+    })
+    setJobs(vakansiyalarResult.jobs)
+
+    // Загружаем гундалик работы
+    const gundelikResult = await getActiveJobsPaginated({
+      jobType: 'gundelik',
+      page: 1,
+      limit: 8
+    })
+    setShortJobs(gundelikResult.jobs)
+
+    setLoading(false)
+  }
 
   // Check authentication status
   useEffect(() => {
@@ -100,7 +62,7 @@ export default function HomePage() {
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !loading) {
+        if (entries[0].isIntersecting && !loading && hasMore) {
           loadMore()
         }
       },
@@ -116,20 +78,38 @@ export default function HomePage() {
         observer.unobserve(observerTarget.current)
       }
     }
-  }, [loading, page])
+  }, [loading, hasMore, activeTab])
 
-  const loadMore = () => {
-    if (loading) return
+  const loadMore = async () => {
+    if (loading || !hasMore) return
 
     setLoading(true)
 
-    // Simulate API delay
-    setTimeout(() => {
-      const newJobs = generateJobs(page * 20, 20)
-      setJobs((prev) => [...prev, ...newJobs])
-      setPage((prev) => prev + 1)
-      setLoading(false)
-    }, 500)
+    if (activeTab === 'vakansiyalar') {
+      const nextPage = vakansiyalarPage + 1
+      const result = await getActiveJobsPaginated({
+        jobType: 'vakansiya',
+        page: nextPage,
+        limit: 20
+      })
+
+      setJobs((prev) => [...prev, ...result.jobs])
+      setVakansiyalarPage(nextPage)
+      setHasMore(result.hasMore)
+    } else {
+      const nextPage = gundelikPage + 1
+      const result = await getActiveJobsPaginated({
+        jobType: 'gundelik',
+        page: nextPage,
+        limit: 8
+      })
+
+      setShortJobs((prev) => [...prev, ...result.jobs])
+      setGundelikPage(nextPage)
+      setHasMore(result.hasMore)
+    }
+
+    setLoading(false)
   }
 
   const handleSearch = (query: string, location: string, category: string) => {
@@ -209,7 +189,16 @@ export default function HomePage() {
               {jobs.map((job) => (
                 <JobCard
                   key={job.id}
-                  {...job}
+                  id={job.id}
+                  title={job.title}
+                  company={job.company || ''}
+                  location={job.location}
+                  salary={job.salary}
+                  postedAt={new Date(job.created_at).toLocaleDateString('az-AZ')}
+                  category={job.category as any}
+                  isRemote={job.location.toLowerCase().includes('distant') || job.location.toLowerCase().includes('uzaqdan')}
+                  isVIP={job.is_vip}
+                  isUrgent={job.is_urgent}
                   onApply={() => handleApply(job.id)}
                 />
               ))}
@@ -239,7 +228,18 @@ export default function HomePage() {
             {/* СЕТКА: 2 колонки на мобилке, 3-4 на десктопе */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
               {shortJobs.map((job) => (
-                <ShortJobCard key={job.id} {...job} />
+                <ShortJobCard
+                  key={job.id}
+                  id={job.id}
+                  title={job.title}
+                  category={job.category as any}
+                  location={job.location}
+                  salary={job.salary || ''}
+                  startDate={job.start_date || ''}
+                  duration={job.duration}
+                  isVIP={job.is_vip}
+                  isUrgent={job.is_urgent}
+                />
               ))}
             </div>
           </div>
