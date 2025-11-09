@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import Navigation from '@/components/ui/Navigation'
 import { getCurrentUser } from '@/lib/auth'
 import { createJob } from '@/lib/api/jobs'
+import { getCategories, getCities, Category } from '@/lib/api/categories'
 import { CATEGORIES, ShortJobCategory } from '@/components/short-jobs/CategoryIcons'
 import { PlusCircleIcon, BriefcaseIcon, ClockIcon } from '@heroicons/react/24/outline'
 
@@ -17,6 +18,12 @@ export default function PostJobPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState<any>(null)
+
+  // Categories and cities from DB
+  const [vakansiyaCategories, setVakansiyaCategories] = useState<Category[]>([])
+  const [gundelikCategories, setGundelikCategories] = useState<Category[]>([])
+  const [cities, setCities] = useState<string[]>([])
+  const [loadingData, setLoadingData] = useState(true)
 
   // Форма для обычных вакансий
   const [vakansiyaForm, setVakansiyaForm] = useState({
@@ -96,6 +103,23 @@ export default function PostJobPage() {
     }
     setGundelikForm(prev => ({ ...prev, [field]: value }))
   }
+
+  // Load categories and cities from DB
+  useEffect(() => {
+    const loadData = async () => {
+      setLoadingData(true)
+      const [vakCats, gunCats, citiesList] = await Promise.all([
+        getCategories('vacancy'),
+        getCategories('short_job'),
+        getCities()
+      ])
+      setVakansiyaCategories(vakCats)
+      setGundelikCategories(gunCats)
+      setCities(citiesList)
+      setLoadingData(false)
+    }
+    loadData()
+  }, [])
 
   // Check authentication on mount
   useEffect(() => {
@@ -315,8 +339,6 @@ export default function PostJobPage() {
     }
   }
 
-  const categories = ['İT və Texnologiya', 'Marketinq', 'Dizayn', 'Satış', 'İdarəetmə', 'Maliyyə', 'İnsan Resursları', 'Digər']
-  const cities = ['Bakı, Nəsimi', 'Bakı, Nərimanov', 'Bakı, Yasamal', 'Bakı, Xətai', 'Bakı, Səbail', 'Bakı, Nizami', 'Sumqayıt', 'Gəncə']
   const employmentTypes = ['Tam ştat', 'Yarım ştat', 'Distant', 'Hibrid', 'Müqavilə əsasında']
   const experienceLevels = ['Təcrübəsiz', '1 ilə qədər', '1-2 il', '2-3 il', '3-5 il', '5+ il']
   const educationLevels = ['Orta', 'Orta-ixtisas', 'Natamam ali', 'Ali', 'Magistr', 'Doktorantura']
@@ -415,9 +437,10 @@ export default function PostJobPage() {
                       onChange={(e) => handleVakansiyaChange('category', e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base bg-white"
                       required
+                      disabled={loadingData}
                     >
-                      <option value="">Seçin</option>
-                      {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                      <option value="">{loadingData ? 'Yüklənir...' : 'Seçin'}</option>
+                      {vakansiyaCategories.map(cat => <option key={cat.id} value={cat.name}>{cat.name_az}</option>)}
                     </select>
                   </div>
 
@@ -430,8 +453,9 @@ export default function PostJobPage() {
                       onChange={(e) => handleVakansiyaChange('location', e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base bg-white"
                       required
+                      disabled={loadingData}
                     >
-                      <option value="">Seçin</option>
+                      <option value="">{loadingData ? 'Yüklənir...' : 'Seçin'}</option>
                       {cities.map(city => <option key={city} value={city}>{city}</option>)}
                     </select>
                   </div>
@@ -517,9 +541,10 @@ export default function PostJobPage() {
                     onChange={(e) => handleGundelikChange('category', e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base bg-white"
                     required
+                    disabled={loadingData}
                   >
-                    <option value="">Seçin</option>
-                    {CATEGORIES.map(cat => <option key={cat.id} value={cat.id}>{cat.nameAz}</option>)}
+                    <option value="">{loadingData ? 'Yüklənir...' : 'Seçin'}</option>
+                    {gundelikCategories.map(cat => <option key={cat.id} value={cat.name}>{cat.name_az}</option>)}
                   </select>
                 </div>
 
@@ -532,8 +557,9 @@ export default function PostJobPage() {
                     onChange={(e) => handleGundelikChange('location', e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base bg-white"
                     required
+                    disabled={loadingData}
                   >
-                    <option value="">Seçin</option>
+                    <option value="">{loadingData ? 'Yüklənir...' : 'Seçin'}</option>
                     {cities.map(city => <option key={city} value={city}>{city}</option>)}
                   </select>
                 </div>
