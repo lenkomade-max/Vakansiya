@@ -1,16 +1,18 @@
 import { createClient } from './supabase/client'
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(returnTo?: string) {
   try {
     const supabase = createClient()
 
-    // Use production URL in production, localhost in development
-    const redirectUrl = process.env.NODE_ENV === 'production'
-      ? `${window.location.origin}/auth/callback`
-      : `${window.location.origin}/auth/callback`
+    // Build redirect URL with optional returnTo parameter
+    const baseUrl = `${window.location.origin}/auth/callback`
+    const redirectUrl = returnTo
+      ? `${baseUrl}?returnTo=${encodeURIComponent(returnTo)}`
+      : baseUrl
 
     console.log('Starting Google OAuth...')
     console.log('Redirect URL:', redirectUrl)
+    console.log('Return to:', returnTo)
     console.log('Current origin:', window.location.origin)
 
     const { data, error } = await supabase.auth.signInWithOAuth({

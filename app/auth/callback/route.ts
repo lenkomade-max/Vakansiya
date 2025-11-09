@@ -4,7 +4,9 @@ import { createClient } from '@/lib/supabase/server'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/'
+  // Check for returnTo parameter first, then fall back to next, then default to '/'
+  const returnTo = searchParams.get('returnTo')
+  const next = returnTo ?? searchParams.get('next') ?? '/'
 
   if (code) {
     const supabase = await createClient()

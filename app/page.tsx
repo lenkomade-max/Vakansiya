@@ -127,8 +127,8 @@ export default function HomePage() {
 
   const handlePostJob = () => {
     if (!isAuthenticated) {
-      // Если пользователь не авторизован, редирект на Google вход
-      signInWithGoogle()
+      // Если пользователь не авторизован, редирект на Google вход с returnTo параметром
+      signInWithGoogle('/post-job')
       return
     }
     router.push('/post-job')
