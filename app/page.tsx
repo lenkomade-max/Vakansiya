@@ -274,6 +274,7 @@ export default function HomePage() {
   }
 
   const handleCategorySelect = (categoryNameAz: string) => {
+    console.log('[handleCategorySelect] Selected category:', categoryNameAz)
     setSelectedCategory(categoryNameAz)
     setActiveFilters(null) // Сбрасываем фильтры при выборе категории
 
@@ -282,9 +283,16 @@ export default function HomePage() {
       if (!categoryNameAz) {
         setJobs(allJobs) // Показываем все
       } else {
-        const filtered = allJobs.filter(job =>
-          job.parent_category_name?.toLowerCase() === categoryNameAz.toLowerCase()
-        )
+        console.log('[handleCategorySelect] All jobs count:', allJobs.length)
+        console.log('[handleCategorySelect] Sample job parent_category_name:', allJobs[0]?.parent_category_name)
+        const filtered = allJobs.filter(job => {
+          const match = job.parent_category_name?.toLowerCase() === categoryNameAz.toLowerCase()
+          if (!match && allJobs.indexOf(job) < 3) {
+            console.log('[handleCategorySelect] Job parent_category_name:', job.parent_category_name, 'Expected:', categoryNameAz)
+          }
+          return match
+        })
+        console.log('[handleCategorySelect] Filtered jobs count:', filtered.length)
         setJobs(filtered)
       }
     } else {

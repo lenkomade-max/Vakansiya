@@ -347,7 +347,7 @@ export async function getActiveJobs(jobType?: JobType): Promise<Job[]> {
   const jobs = (data || []).map((job: any) => ({
     ...job,
     category_name: job.category_info?.name_az,
-    parent_category_name: job.category_info?.parent?.name_az,
+    parent_category_name: job.category_info?.parent?.name_az || job.category_info?.name_az,
   }))
 
   return jobs
@@ -429,7 +429,7 @@ export async function getActiveJobsPaginated(params: {
   const jobs = (data || []).map((job: any) => ({
     ...job,
     category_name: job.category_info?.name_az,
-    parent_category_name: job.category_info?.parent?.name_az,
+    parent_category_name: job.category_info?.parent?.name_az || job.category_info?.name_az,
   }))
 
   const total = count || 0
