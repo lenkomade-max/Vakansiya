@@ -16,6 +16,7 @@ export type Job = {
   category_name?: string // Azerbaijani name for display
   parent_category_name?: string // Parent category name for display
   location: string
+  work_address?: string
   salary?: string
   description?: string
   company?: string
@@ -27,6 +28,7 @@ export type Job = {
   benefits?: string
   start_date?: string
   duration?: string
+  contact_name?: string
   contact_phone: string
   status: 'pending_review' | 'pending_moderation' | 'active' | 'inactive' | 'expired' | 'rejected'
   is_vip: boolean
