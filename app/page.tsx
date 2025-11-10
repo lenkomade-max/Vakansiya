@@ -30,6 +30,7 @@ export default function HomePage() {
   const [hasMore, setHasMore] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [gundelikLoaded, setGundelikLoaded] = useState(false) // Флаг для lazy loading
+  const [activeFilters, setActiveFilters] = useState<SearchFilters | null>(null) // Активные фильтры для серверной фильтрации
   const observerTarget = useRef(null)
 
   // Загружаем initial jobs из БД
@@ -129,10 +130,30 @@ export default function HomePage() {
       const result = await getActiveJobsPaginated({
         jobType: 'vakansiya',
         page: nextPage,
-        limit: 10  // Загружаем по 10 для баланса скорости и UX
+        limit: 10,
+        // Применяем активные фильтры (если есть)
+        location: activeFilters?.location || undefined,
+        employmentType: activeFilters?.employmentType || undefined,
+        experience: activeFilters?.experience || undefined,
+        searchQuery: activeFilters?.query || undefined,
       })
 
-      setJobs((prev) => [...prev, ...result.jobs])
+      let newJobs = result.jobs
+
+      // Применяем клиентский фильтр по зарплате (если есть)
+      if (activeFilters?.salaryMin || activeFilters?.salaryMax) {
+        newJobs = newJobs.filter(job => {
+          if (!job.salary) return false
+          const salaryNumbers = job.salary.match(/\d+/g)
+          if (!salaryNumbers || salaryNumbers.length === 0) return false
+          const jobSalary = parseInt(salaryNumbers[0])
+          if (activeFilters.salaryMin && jobSalary < activeFilters.salaryMin) return false
+          if (activeFilters.salaryMax && jobSalary > activeFilters.salaryMax) return false
+          return true
+        })
+      }
+
+      setJobs((prev) => [...prev, ...newJobs])
       setVakansiyalarPage(nextPage)
       setHasMore(result.hasMore)
     } else {
@@ -140,10 +161,30 @@ export default function HomePage() {
       const result = await getActiveJobsPaginated({
         jobType: 'gundelik',
         page: nextPage,
-        limit: 10  // Загружаем по 10 для баланса скорости и UX
+        limit: 10,
+        // Применяем активные фильтры (если есть)
+        location: activeFilters?.location || undefined,
+        employmentType: activeFilters?.employmentType || undefined,
+        experience: activeFilters?.experience || undefined,
+        searchQuery: activeFilters?.query || undefined,
       })
 
-      setShortJobs((prev) => [...prev, ...result.jobs])
+      let newJobs = result.jobs
+
+      // Применяем клиентский фильтр по зарплате (если есть)
+      if (activeFilters?.salaryMin || activeFilters?.salaryMax) {
+        newJobs = newJobs.filter(job => {
+          if (!job.salary) return false
+          const salaryNumbers = job.salary.match(/\d+/g)
+          if (!salaryNumbers || salaryNumbers.length === 0) return false
+          const jobSalary = parseInt(salaryNumbers[0])
+          if (activeFilters.salaryMin && jobSalary < activeFilters.salaryMin) return false
+          if (activeFilters.salaryMax && jobSalary > activeFilters.salaryMax) return false
+          return true
+        })
+      }
+
+      setShortJobs((prev) => [...prev, ...newJobs])
       setGundelikPage(nextPage)
       setHasMore(result.hasMore)
     }
@@ -151,32 +192,41 @@ export default function HomePage() {
     setLoading(false)
   }
 
-  const handleSearch = (filters: SearchFilters) => {
-    // Фильтруем вакансии на клиенте
+  const handleSearch = async (filters: SearchFilters) => {
+    // ОПТИМИЗАЦИЯ: Серверная фильтрация вместо клиентской
     setLoading(true)
+    setActiveFilters(filters) // Сохраняем фильтры для infinite scroll
 
-    let filtered = activeTab === 'vakansiyalar' ? [...allJobs] : [...allShortJobs]
+    // Если фильтры пустые - загружаем все
+    const hasFilters = filters.query || filters.location || filters.employmentType || filters.experience
 
-    // Фильтр по тексту (поиск в title, company, description)
-    if (filters.query) {
-      const queryLower = filters.query.toLowerCase()
-      filtered = filtered.filter(job =>
-        job.title.toLowerCase().includes(queryLower) ||
-        (job.company && job.company.toLowerCase().includes(queryLower)) ||
-        (job.description && job.description.toLowerCase().includes(queryLower))
-      )
+    if (!hasFilters && !filters.salaryMin && !filters.salaryMax) {
+      // Нет фильтров - показываем все из начальной загрузки
+      if (activeTab === 'vakansiyalar') {
+        setJobs(allJobs)
+      } else {
+        setShortJobs(allShortJobs)
+      }
+      setLoading(false)
+      return
     }
 
-    // Фильтр по городу
-    if (filters.location) {
-      filtered = filtered.filter(job =>
-        job.location.toLowerCase().includes(filters.location.toLowerCase())
-      )
-    }
+    // Серверные фильтры (все кроме зарплаты)
+    const result = await getActiveJobsPaginated({
+      jobType: activeTab === 'vakansiyalar' ? 'vakansiya' : 'gundelik',
+      location: filters.location || undefined,
+      employmentType: filters.employmentType || undefined,
+      experience: filters.experience || undefined,
+      searchQuery: filters.query || undefined,
+      page: 1,
+      limit: 15
+    })
 
-    // Фильтр по зарплате (min/max)
+    let filteredJobs = result.jobs
+
+    // Фильтр по зарплате (КЛИЕНТСКИЙ - т.к. salary это строка)
     if (filters.salaryMin || filters.salaryMax) {
-      filtered = filtered.filter(job => {
+      filteredJobs = filteredJobs.filter(job => {
         if (!job.salary) return false
 
         // Извлекаем числа из строки зарплаты
@@ -193,27 +243,16 @@ export default function HomePage() {
       })
     }
 
-    // Фильтр по типу занятости
-    if (filters.employmentType) {
-      filtered = filtered.filter(job =>
-        job.employment_type && job.employment_type.includes(filters.employmentType!)
-      )
-    }
-
-    // Фильтр по опыту
-    if (filters.experience) {
-      filtered = filtered.filter(job =>
-        job.experience && job.experience.includes(filters.experience!)
-      )
-    }
-
-    // Обновляем отфильтрованные вакансии
+    // Обновляем вакансии и pagination
     if (activeTab === 'vakansiyalar') {
-      setJobs(filtered as DBJob[])
+      setJobs(filteredJobs)
+      setVakansiyalarPage(1)
     } else {
-      setShortJobs(filtered as DBJob[])
+      setShortJobs(filteredJobs)
+      setGundelikPage(1)
     }
 
+    setHasMore(result.hasMore)
     setLoading(false)
   }
 
@@ -236,6 +275,7 @@ export default function HomePage() {
 
   const handleCategorySelect = (categoryNameAz: string) => {
     setSelectedCategory(categoryNameAz)
+    setActiveFilters(null) // Сбрасываем фильтры при выборе категории
 
     // Фильтруем по parent_category_name (название главной категории из БД)
     if (activeTab === 'vakansiyalar') {

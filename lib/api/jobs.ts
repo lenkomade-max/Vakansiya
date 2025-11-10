@@ -337,11 +337,14 @@ export async function getActiveJobsPaginated(params: {
   jobType?: JobType
   category?: string
   location?: string
+  employmentType?: string
+  experience?: string
+  searchQuery?: string
   page?: number
   limit?: number
 }): Promise<{ jobs: Job[]; total: number; hasMore: boolean }> {
   const supabase = await createClient()
-  const { jobType, category, location, page = 1, limit = 20 } = params
+  const { jobType, category, location, employmentType, experience, searchQuery, page = 1, limit = 20 } = params
 
   // Calculate offset
   const offset = (page - 1) * limit
@@ -370,6 +373,16 @@ export async function getActiveJobsPaginated(params: {
   }
   if (location) {
     query = query.ilike('location', `%${location}%`)
+  }
+  if (employmentType) {
+    query = query.ilike('employment_type', `%${employmentType}%`)
+  }
+  if (experience) {
+    query = query.ilike('experience', `%${experience}%`)
+  }
+  if (searchQuery) {
+    // Полнотекстовый поиск по title, company, description
+    query = query.or(`title.ilike.%${searchQuery}%,company.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`)
   }
 
   // Add pagination and ordering
