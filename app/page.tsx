@@ -54,7 +54,7 @@ export default function HomePage() {
       getActiveJobsPaginated({
         jobType: 'vakansiya',
         page: 1,
-        limit: 6  // Уменьшили с 20 до 6 для быстрого рендеринга
+        limit: 15  // Достаточно для первого экрана, не триггерит сразу infinite scroll
       })
     ])
 
@@ -78,7 +78,7 @@ export default function HomePage() {
     const gundelikResult = await getActiveJobsPaginated({
       jobType: 'gundelik',
       page: 1,
-      limit: 6  // Тоже начинаем с 6 для быстрого рендеринга
+      limit: 10  // Достаточно для первого экрана
     })
 
     setShortJobs(gundelikResult.jobs)
@@ -105,7 +105,7 @@ export default function HomePage() {
           loadMore()
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.5 }  // Увеличили с 0.1 до 0.5 чтобы не триггерить слишком рано
     )
 
     if (observerTarget.current) {
@@ -129,7 +129,7 @@ export default function HomePage() {
       const result = await getActiveJobsPaginated({
         jobType: 'vakansiya',
         page: nextPage,
-        limit: 6  // Загружаем по 6 для плавного скролла
+        limit: 10  // Загружаем по 10 для баланса скорости и UX
       })
 
       setJobs((prev) => [...prev, ...result.jobs])
@@ -140,7 +140,7 @@ export default function HomePage() {
       const result = await getActiveJobsPaginated({
         jobType: 'gundelik',
         page: nextPage,
-        limit: 6  // Загружаем по 6 для плавного скролла
+        limit: 10  // Загружаем по 10 для баланса скорости и UX
       })
 
       setShortJobs((prev) => [...prev, ...result.jobs])
