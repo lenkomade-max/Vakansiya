@@ -29,6 +29,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [gundelikLoaded, setGundelikLoaded] = useState(false) // Флаг для lazy loading
   const observerTarget = useRef(null)
 
   // Загружаем initial jobs из БД
@@ -39,15 +40,13 @@ export default function HomePage() {
   const loadInitialData = async () => {
     setLoading(true)
 
-    // ОПТИМИЗАЦИЯ: Все запросы выполняются ПАРАЛЛЕЛЬНО!
-    // Было: 5 последовательных await = 2.6 секунды
-    // Стало: Promise.all = 0.65 секунды (экономия 2 сек!)
+    // ОПТИМИЗАЦИЯ: Грузим только вакансии + мета-данные
+    // Gündəlik загружаем ТОЛЬКО при переключении на вкладку (lazy loading)
     const [
       citiesData,
       vakansiyaCats,
       gundelikCats,
-      vakansiyalarResult,
-      gundelikResult
+      vakansiyalarResult
     ] = await Promise.all([
       getCities(),
       getParentCategories('vacancy'),
@@ -55,12 +54,7 @@ export default function HomePage() {
       getActiveJobsPaginated({
         jobType: 'vakansiya',
         page: 1,
-        limit: 20
-      }),
-      getActiveJobsPaginated({
-        jobType: 'gundelik',
-        page: 1,
-        limit: 8
+        limit: 6  // Уменьшили с 20 до 6 для быстрого рендеринга
       })
     ])
 
@@ -69,9 +63,27 @@ export default function HomePage() {
     setVakansiyaCategories(vakansiyaCats)
     setGundelikCategories(gundelikCats)
     setJobs(vakansiyalarResult.jobs)
-    setAllJobs(vakansiyalarResult.jobs) // Сохраняем все для фильтрации
+    setAllJobs(vakansiyalarResult.jobs)
+    // Gündəlik НЕ грузим - будет загружен при переключении на вкладку
+
+    setLoading(false)
+  }
+
+  // Lazy loading для Gündəlik işlər - грузим только при клике на вкладку
+  const loadGundelikData = async () => {
+    if (gundelikLoaded) return // Уже загружены
+
+    setLoading(true)
+
+    const gundelikResult = await getActiveJobsPaginated({
+      jobType: 'gundelik',
+      page: 1,
+      limit: 6  // Тоже начинаем с 6 для быстрого рендеринга
+    })
+
     setShortJobs(gundelikResult.jobs)
-    setAllShortJobs(gundelikResult.jobs) // Сохраняем все для фильтрации
+    setAllShortJobs(gundelikResult.jobs)
+    setGundelikLoaded(true)
 
     setLoading(false)
   }
@@ -117,7 +129,7 @@ export default function HomePage() {
       const result = await getActiveJobsPaginated({
         jobType: 'vakansiya',
         page: nextPage,
-        limit: 20
+        limit: 6  // Загружаем по 6 для плавного скролла
       })
 
       setJobs((prev) => [...prev, ...result.jobs])
@@ -128,7 +140,7 @@ export default function HomePage() {
       const result = await getActiveJobsPaginated({
         jobType: 'gundelik',
         page: nextPage,
-        limit: 8
+        limit: 6  // Загружаем по 6 для плавного скролла
       })
 
       setShortJobs((prev) => [...prev, ...result.jobs])
@@ -276,7 +288,10 @@ export default function HomePage() {
               Vakansiyalar
             </button>
             <button
-              onClick={() => setActiveTab('gundelik')}
+              onClick={() => {
+                setActiveTab('gundelik')
+                loadGundelikData() // Lazy load при переключении
+              }}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all ${
                 activeTab === 'gundelik'
                   ? 'bg-white text-black shadow-sm'
