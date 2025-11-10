@@ -152,9 +152,6 @@ export default function VakansiyaDetailPage() {
                         TƏCİLİ
                       </span>
                     )}
-                    <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded">
-                      {vakansiya.category}
-                    </span>
                   </div>
 
                   <h1 className="text-xl md:text-2xl font-bold text-black mb-2">
@@ -207,6 +204,45 @@ export default function VakansiyaDetailPage() {
                     </div>
                   )}
 
+                  {vakansiya.experience && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <UserGroupIcon className="w-5 h-5 text-gray-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Təcrübə</p>
+                        <p className="text-sm font-semibold text-black">{vakansiya.experience}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {vakansiya.education && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Təhsil</p>
+                        <p className="text-sm font-semibold text-black">{vakansiya.education}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {vakansiya.work_address && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <BuildingOfficeIcon className="w-5 h-5 text-gray-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">İş ünvanı</p>
+                        <p className="text-sm font-semibold text-black">{vakansiya.work_address}</p>
+                      </div>
+                    </div>
+                  )}
+
                   {vakansiya.deadline && (
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -215,6 +251,30 @@ export default function VakansiyaDetailPage() {
                       <div>
                         <p className="text-xs text-gray-500">Son tarix</p>
                         <p className="text-sm font-semibold text-black">{vakansiya.deadline}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {vakansiya.start_date && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <CalendarIcon className="w-5 h-5 text-gray-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Başlama tarixi</p>
+                        <p className="text-sm font-semibold text-black">{vakansiya.start_date}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {vakansiya.duration && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <ClockIcon className="w-5 h-5 text-gray-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Müddət</p>
+                        <p className="text-sm font-semibold text-black">{vakansiya.duration}</p>
                       </div>
                     </div>
                   )}
@@ -228,6 +288,11 @@ export default function VakansiyaDetailPage() {
                 </h2>
                 <div className="text-gray-700 whitespace-pre-line leading-relaxed mb-6">
                   {vakansiya.description}
+                </div>
+
+                {/* Vacancy ID */}
+                <div className="mb-6 pb-4 border-b border-gray-200">
+                  <p className="text-xs text-gray-500">Elan ID: <span className="font-mono text-gray-600">{vakansiya.id}</span></p>
                 </div>
 
                 {/* Requirements */}
@@ -261,6 +326,13 @@ export default function VakansiyaDetailPage() {
           <div className="lg:col-span-1">
             {/* Contact Buttons */}
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-6 sticky top-6">
+              {vakansiya.contact_name && (
+                <div className="mb-4 text-center">
+                  <p className="text-sm text-gray-500 mb-1">Əlaqə şəxsi</p>
+                  <p className="text-lg font-bold text-black">{vakansiya.contact_name}</p>
+                </div>
+              )}
+
               {!showPhone ? (
                 <button
                   onClick={() => setShowPhone(true)}

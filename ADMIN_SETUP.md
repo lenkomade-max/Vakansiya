@@ -39,7 +39,7 @@ UPDATE profiles
 SET role = 'admin'
 WHERE id = (
   SELECT id FROM auth.users
-  WHERE email = 'your-email@example.com'
+  WHERE email = 'lenkomade@gmail.com'
   LIMIT 1
 );
 ```
