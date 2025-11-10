@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
 import Navigation from '@/components/ui/Navigation'
 import { getJob, Job } from '@/lib/api/jobs'
 import { getCurrentUser } from '@/lib/auth'
@@ -21,35 +22,30 @@ import { FireIcon } from '@heroicons/react/24/solid'
 export default function VakansiyaDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const [vakansiya, setVakansiya] = useState<Job | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [showPhone, setShowPhone] = useState(false)
+  const jobId = params.id as string
 
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true)
+  // Параллельная загрузка auth и job с кешированием
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: getCurrentUser,
+    staleTime: 5 * 60 * 1000, // 5 минут кеш
+  })
 
-      // Check authentication
-      const currentUser = await getCurrentUser()
-      setIsAuthenticated(!!currentUser)
+  const { data: vakansiya, isLoading: loading, isError } = useQuery({
+    queryKey: ['job', jobId],
+    queryFn: () => getJob(jobId),
+    enabled: !!jobId, // Загружаем только если есть ID
+    staleTime: 5 * 60 * 1000, // 5 минут кеш
+  })
 
-      // Load job data
-      const jobId = params.id as string
-      const jobData = await getJob(jobId)
+  const isAuthenticated = !!currentUser
 
-      if (!jobData) {
-        // Job not found - redirect to 404 or catalog
-        router.push('/vakansiyalar')
-        return
-      }
-
-      setVakansiya(jobData)
-      setLoading(false)
-    }
-
-    loadData()
-  }, [params.id, router])
+  // Redirect if job not found
+  if (isError || (vakansiya === null && !loading)) {
+    router.push('/vakansiyalar')
+    return null
+  }
 
   const handleLogin = () => {
     router.push('/')
