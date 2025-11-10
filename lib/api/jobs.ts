@@ -235,7 +235,20 @@ export async function getJob(jobId: string): Promise<Job | null> {
 
   const { data, error } = await supabase
     .from('jobs')
-    .select('*')
+    .select(`
+      *,
+      category_info:categories!category (
+        id,
+        name,
+        name_az,
+        image_url,
+        image_alt,
+        parent_id,
+        parent:categories!parent_id (
+          name_az
+        )
+      )
+    `)
     .eq('id', jobId)
     .single()
 
@@ -244,7 +257,14 @@ export async function getJob(jobId: string): Promise<Job | null> {
     return null
   }
 
-  return data
+  // Transform data to include category names
+  const job = {
+    ...data,
+    category_name: (data as any).category_info?.name_az,
+    parent_category_name: (data as any).category_info?.parent?.name_az || (data as any).category_info?.name_az,
+  }
+
+  return job
 }
 
 /**
@@ -298,13 +318,13 @@ export async function getActiveJobs(jobType?: JobType): Promise<Job[]> {
     .from('jobs')
     .select(`
       *,
-      category_info:category (
+      category_info:categories!category (
         id,
         name,
         name_az,
         image_url,
         image_alt,
-        parent:parent_id (
+        parent:categories!parent_id (
           name_az
         )
       )
@@ -357,13 +377,13 @@ export async function getActiveJobsPaginated(params: {
     .from('jobs')
     .select(`
       *,
-      category_info:category (
+      category_info:categories!category (
         id,
         name,
         name_az,
         image_url,
         image_alt,
-        parent:parent_id (
+        parent:categories!parent_id (
           name_az
         )
       )

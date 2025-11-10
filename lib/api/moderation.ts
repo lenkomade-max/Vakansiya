@@ -52,7 +52,7 @@ export async function getPendingJobs() {
     .from('jobs')
     .select(`
       *,
-      category_info:category (
+      category_info:categories!category (
         id,
         name,
         name_az,
@@ -87,7 +87,7 @@ export async function getAllJobs(statusFilter?: 'all' | 'active' | 'pending_revi
     .from('jobs')
     .select(`
       *,
-      category_info:category (
+      category_info:categories!category (
         id,
         name,
         name_az,

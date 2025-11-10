@@ -3,9 +3,11 @@
 import React, { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
+import Image from 'next/image'
 import Navigation from '@/components/ui/Navigation'
 import { getJob, Job } from '@/lib/api/jobs'
 import { getCurrentUser } from '@/lib/auth'
+import { getCategoryImage, getCategoryImageAlt } from '@/lib/utils/category-image'
 import { CategoryIcon, CATEGORIES, ShortJobCategory } from '@/components/short-jobs/CategoryIcons'
 import {
   MapPinIcon,
@@ -101,6 +103,15 @@ export default function ShortJobDetailPage() {
 
   const categoryConfig = CATEGORIES.find(c => c.id === job.category as ShortJobCategory)
 
+  // Получаем изображение категории
+  const categoryImage = job.category_name
+    ? getCategoryImage({ name: job.category_name, image_url: (job as any).category_info?.image_url })
+    : null
+
+  const categoryAlt = job.category_name
+    ? getCategoryImageAlt({ name: job.category_name })
+    : 'Gündəlik iş'
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Навигация */}
@@ -126,6 +137,52 @@ export default function ShortJobDetailPage() {
           <div className="lg:col-span-2">
             {/* Job Card */}
             <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+              {/* Category Image */}
+              <div className="relative aspect-video bg-gray-100 overflow-hidden">
+                {categoryImage ? (
+                  <Image
+                    src={categoryImage}
+                    alt={categoryAlt}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 800px"
+                    priority
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <CategoryIcon category={job.category as ShortJobCategory} size="xl" showBackground={false} />
+                  </div>
+                )}
+
+                {/* Badges on image */}
+                <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    {job.is_vip && (
+                      <span className="px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-sm font-bold rounded shadow-md flex items-center gap-1">
+                        <FireIcon className="w-4 h-4" />
+                        VIP
+                      </span>
+                    )}
+                    {job.is_urgent && (
+                      <span className="px-3 py-1.5 bg-red-500 text-white font-bold rounded shadow-md text-sm whitespace-nowrap flex items-center gap-1">
+                        <span className="w-2 h-2 bg-white rounded-full"></span>
+                        TƏCİLİ
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Salary badge (always shown for gundelik) */}
+                {job.salary && (
+                  <div className="absolute bottom-4 left-4">
+                    <span className="px-3 py-1.5 bg-white/95 text-black font-bold rounded shadow-md text-sm whitespace-nowrap flex items-center gap-1">
+                      <BanknotesIcon className="w-4 h-4" />
+                      {job.salary}
+                    </span>
+                  </div>
+                )}
+              </div>
+
               {/* Header with Category Icon */}
               <div className="relative bg-gray-50 p-6 flex items-start gap-4 border-b border-gray-200">
                 <div className="w-16 h-16 flex-shrink-0">
@@ -133,21 +190,6 @@ export default function ShortJobDetailPage() {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    {job.is_vip && (
-                      <span className="px-2 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold rounded flex items-center gap-1">
-                        <FireIcon className="w-3 h-3" />
-                        VIP
-                      </span>
-                    )}
-                    {job.is_urgent && (
-                      <span className="px-2 py-1 bg-red-500 text-white font-bold rounded text-xs whitespace-nowrap flex items-center gap-1">
-                        <span className="w-2 h-2 bg-white rounded-full"></span>
-                        TƏCİLİ
-                      </span>
-                    )}
-                  </div>
-
                   <h1 className="text-xl md:text-2xl font-bold text-black mb-2">
                     {job.title}
                   </h1>
@@ -308,6 +350,43 @@ export default function ShortJobDetailPage() {
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
+            {/* Category Info */}
+            {(job.parent_category_name || job.category_name) && (
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-6">
+                <h3 className="text-base font-bold text-black mb-4">
+                  Kateqoriya
+                </h3>
+
+                {job.parent_category_name && (
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Kateqoriya</p>
+                      <p className="text-sm font-semibold text-black">{job.parent_category_name}</p>
+                    </div>
+                  </div>
+                )}
+
+                {job.category_name && job.category_name !== job.parent_category_name && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Alt kateqoriya</p>
+                      <p className="text-sm font-semibold text-black">{job.category_name}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Contact Buttons */}
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-6 sticky top-6">
               {job.contact_name && (

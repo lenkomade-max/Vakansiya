@@ -166,6 +166,36 @@ export const CATEGORY_IMAGES: Record<string, string> = {
   'Lawyer': '/images/categories/lawyer.jpeg',
   'Photographer': '/images/categories/photographer.jpeg',
   'Translator': '/images/categories/translator.png',
+
+  // ===== PARENT CATEGORIES (for parser) =====
+
+  // GÜNDƏLIK İŞLƏR - Parent Categories
+  'ConstructionMain': '/images/categories/construction.jpeg',
+  'TransportMain': '/images/categories/driver.png',
+  'HomeServicesMain': '/images/categories/cleaning.jpeg',
+  'RestaurantMain': '/images/categories/waiter.png',
+  'WarehouseMain': '/images/categories/warehouse.jpeg',
+  'OfficeMain': '/images/categories/office.jpeg',
+  'CreativeMain': '/images/categories/designer.jpeg',
+  'ITMain': '/images/categories/developer.jpeg',
+  'EducationMain': '/images/categories/teacher.png',
+  'HealthBeautyMain': '/images/categories/doctor.jpeg',
+  'FinanceLegalMain': '/images/categories/accountant.jpeg',
+  'OtherServicesMain': '/images/categories/other.jpeg',
+
+  // VAKANSIYALAR - Parent Categories
+  'ITVacancyMain': '/images/categories/developer.jpeg',
+  'SalesVacancyMain': '/images/categories/sales.jpeg',
+  'MarketingVacancyMain': '/images/categories/marketing.png',
+  'HealthcareVacancyMain': '/images/categories/doctor.jpeg',
+  'EducationVacancyMain': '/images/categories/teacher.png',
+  'FinanceVacancyMain': '/images/categories/accountant.jpeg',
+  'ConstructionVacancyMain': '/images/categories/construction.jpeg',
+  'RestaurantVacancyMain': '/images/categories/waiter.png',
+  'TransportVacancyMain': '/images/categories/driver.png',
+  'AdminVacancyMain': '/images/categories/office.jpeg',
+  'DesignVacancyMain': '/images/categories/designer.jpeg',
+  'OtherVacancyMain': '/images/categories/other.jpeg',
 };
 
 /**
