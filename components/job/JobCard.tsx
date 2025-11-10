@@ -1,6 +1,8 @@
 import React from 'react';
 import { MapPinIcon, ClockIcon, BanknotesIcon, BriefcaseIcon } from '@heroicons/react/24/outline';
 import { FireIcon } from '@heroicons/react/24/solid';
+import { getCategoryImage, getCategoryImageAlt } from '@/lib/utils/category-image';
+import Image from 'next/image';
 
 export interface JobCardProps {
   id: string;
@@ -10,6 +12,8 @@ export interface JobCardProps {
   salary?: string;
   postedAt: string;
   logo?: string;
+  categoryName?: string; // Название категории из БД (например: "FrontendDev")
+  categoryImageUrl?: string | null; // URL изображения категории из БД
   category?: 'it' | 'marketing' | 'design' | 'sales' | 'management' | 'finance' | 'hr' | 'other';
   isRemote?: boolean;
   type?: 'full-time' | 'part-time' | 'contract' | 'freelance';
@@ -25,6 +29,8 @@ export const JobCard: React.FC<JobCardProps> = ({
   salary,
   postedAt,
   logo,
+  categoryName,
+  categoryImageUrl,
   category = 'other',
   isRemote = false,
   type = 'full-time',
@@ -32,6 +38,14 @@ export const JobCard: React.FC<JobCardProps> = ({
   isUrgent = false,
   onApply,
 }) => {
+  // Получаем изображение категории
+  const categoryImage = categoryName
+    ? getCategoryImage({ name: categoryName, image_url: categoryImageUrl })
+    : null;
+
+  const categoryAlt = categoryName
+    ? getCategoryImageAlt({ name: categoryName })
+    : 'Vakansiya';
   // Цвета для категорий (фон логотипа)
   const categoryColors = {
     it: 'bg-blue-50',
@@ -63,22 +77,32 @@ export const JobCard: React.FC<JobCardProps> = ({
       onClick={onApply}
       className="bg-white rounded-xl overflow-hidden border border-gray-200 hover:border-gray-400 hover:shadow-lg transition-all duration-200 cursor-pointer group"
     >
-      {/* Фото/Лого с badges НА нем */}
-      <div className="relative aspect-square bg-gray-100 rounded-t-xl overflow-hidden">
-        {/* Логотип */}
-        <div className={`w-full h-full ${categoryColors[category]} flex items-center justify-center`}>
-          {logo ? (
+      {/* Фото категории с badges НА нем */}
+      <div className="relative w-full h-32 bg-gray-100 rounded-t-xl overflow-hidden">
+        {/* Изображение категории или лого компании */}
+        {categoryImage ? (
+          <Image
+            src={categoryImage}
+            alt={categoryAlt}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+        ) : logo ? (
+          <div className={`w-full h-full ${categoryColors[category]} flex items-center justify-center`}>
             <img
               src={logo}
               alt={company}
-              className="w-20 h-20 object-contain"
+              className="w-16 h-16 object-contain"
             />
-          ) : (
-            <span className="text-5xl font-bold text-gray-400">
+          </div>
+        ) : (
+          <div className={`w-full h-full ${categoryColors[category]} flex items-center justify-center`}>
+            <span className="text-4xl font-bold text-gray-400">
               {company.charAt(0)}
             </span>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Badges СВЕРХУ - VIP + URGENT */}
         <div className="absolute top-2 left-2 right-2 flex items-center justify-between gap-1">

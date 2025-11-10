@@ -1,13 +1,17 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { MapPinIcon, ClockIcon, BanknotesIcon } from '@heroicons/react/24/outline';
 import { FireIcon } from '@heroicons/react/24/solid';
 import { CategoryIcon, ShortJobCategory } from './CategoryIcons';
+import { getCategoryImage, getCategoryImageAlt } from '@/lib/utils/category-image';
 
 export interface ShortJob {
   id: string;
   title: string;
   category: ShortJobCategory;
+  categoryName?: string; // Название категории из БД
+  categoryImageUrl?: string | null; // URL изображения из БД
   location: string;
   salary: string; // Обязательное поле! "80 AZN/gün"
   startDate: string; // "Bu gün", "Sabah", "15 Noyabr"
@@ -24,6 +28,8 @@ export const ShortJobCard: React.FC<ShortJobCardProps> = ({
   id,
   title,
   category,
+  categoryName,
+  categoryImageUrl,
   location,
   salary,
   startDate,
@@ -32,14 +38,32 @@ export const ShortJobCard: React.FC<ShortJobCardProps> = ({
   isUrgent = false,
   onClick,
 }) => {
+  // Получаем изображение категории
+  const categoryImage = categoryName
+    ? getCategoryImage({ name: categoryName, image_url: categoryImageUrl })
+    : null;
+
+  const categoryAlt = categoryName
+    ? getCategoryImageAlt({ name: categoryName })
+    : 'Gündəlik iş';
   const cardContent = (
     <div className="bg-white rounded-xl overflow-hidden border border-gray-200 hover:border-gray-400 hover:shadow-lg transition-all duration-200 cursor-pointer group">
-      {/* Фото/Иконка категории с badges */}
-      <div className="relative aspect-square bg-gray-50 rounded-t-xl overflow-hidden">
-        {/* Иконка категории (центр) */}
-        <div className="w-full h-full flex items-center justify-center">
-          <CategoryIcon category={category} size="xl" showBackground={false} />
-        </div>
+      {/* Фото категории с badges */}
+      <div className="relative w-full h-32 bg-gray-50 rounded-t-xl overflow-hidden">
+        {/* Изображение категории или иконка */}
+        {categoryImage ? (
+          <Image
+            src={categoryImage}
+            alt={categoryAlt}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <CategoryIcon category={category} size="xl" showBackground={false} />
+          </div>
+        )}
 
         {/* Badges СВЕРХУ - VIP + URGENT */}
         <div className="absolute top-2 left-2 right-2 flex items-center justify-between gap-1">
