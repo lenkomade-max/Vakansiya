@@ -121,152 +121,195 @@ export default function ShortJobDetailPage() {
           <span className="font-medium">Geri</span>
         </button>
 
-        {/* Job Card */}
-        <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
-          {/* Header with Category Icon */}
-          <div className="relative bg-gray-50 p-8 flex items-center justify-center border-b border-gray-200">
-            <CategoryIcon category={job.category as ShortJobCategory} size="xl" showBackground={true} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Content */}
+          <div className="lg:col-span-2">
+            {/* Job Card */}
+            <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+              {/* Header with Category Icon */}
+              <div className="relative bg-gray-50 p-6 flex items-start gap-4 border-b border-gray-200">
+                <div className="w-16 h-16 flex-shrink-0">
+                  <CategoryIcon category={job.category as ShortJobCategory} size="lg" showBackground={true} />
+                </div>
 
-            {/* Badges */}
-            <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2">
-              {job.is_vip && (
-                <span className="px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold rounded shadow-md flex items-center gap-1">
-                  <FireIcon className="w-4 h-4" />
-                  VIP
-                </span>
-              )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    {job.is_vip && (
+                      <span className="px-2 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold rounded flex items-center gap-1">
+                        <FireIcon className="w-3 h-3" />
+                        VIP
+                      </span>
+                    )}
+                    {job.is_urgent && (
+                      <span className="px-2 py-1 bg-red-500 text-white font-bold rounded text-xs whitespace-nowrap flex items-center gap-1">
+                        <span className="w-2 h-2 bg-white rounded-full"></span>
+                        TƏCİLİ
+                      </span>
+                    )}
+                  </div>
 
-              {job.is_urgent && (
-                <span className="px-3 py-1.5 bg-red-500 text-white font-bold rounded shadow-md text-xs whitespace-nowrap flex items-center gap-1">
-                  <span className="w-2 h-2 bg-white rounded-full"></span>
-                  TƏCİLİ
-                </span>
-              )}
+                  <h1 className="text-xl md:text-2xl font-bold text-black mb-2">
+                    {job.title}
+                  </h1>
+
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className={`px-3 py-1 ${categoryConfig?.bgColor} ${categoryConfig?.color} text-sm font-medium rounded-full`}>
+                      {categoryConfig?.nameAz}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1 text-sm text-gray-500">
+                    <ClockIcon className="w-4 h-4" />
+                    <span>{formatDate(job.created_at)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Key Info */}
+              <div className="p-6 border-b border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <MapPinIcon className="w-5 h-5 text-gray-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Yer</p>
+                      <p className="text-sm font-semibold text-black">{job.location}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <BanknotesIcon className="w-5 h-5 text-gray-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Ödəniş</p>
+                      <p className="text-sm font-semibold text-black">{job.salary}</p>
+                    </div>
+                  </div>
+
+                  {job.employment_type && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <BriefcaseIcon className="w-5 h-5 text-gray-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">İş rejimi</p>
+                        <p className="text-sm font-semibold text-black">{job.employment_type}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {job.experience && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <UserGroupIcon className="w-5 h-5 text-gray-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Təcrübə</p>
+                        <p className="text-sm font-semibold text-black">{job.experience}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {job.education && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Təhsil</p>
+                        <p className="text-sm font-semibold text-black">{job.education}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {job.work_address && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <BuildingOfficeIcon className="w-5 h-5 text-gray-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">İş ünvanı</p>
+                        <p className="text-sm font-semibold text-black">{job.work_address}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {job.start_date && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <CalendarIcon className="w-5 h-5 text-gray-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Başlama tarixi</p>
+                        <p className="text-sm font-semibold text-black">{job.start_date}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {job.duration && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <ClockIcon className="w-5 h-5 text-gray-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Müddət</p>
+                        <p className="text-sm font-semibold text-black">{job.duration}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="p-6">
+                <h2 className="text-lg font-bold text-black mb-4">
+                  İşin təsviri
+                </h2>
+                <div className="text-gray-700 whitespace-pre-line leading-relaxed mb-6">
+                  {job.description}
+                </div>
+
+                {/* Job ID */}
+                <div className="mb-6 pb-4 border-b border-gray-200">
+                  <p className="text-xs text-gray-500">Elan ID: <span className="font-mono text-gray-600">{job.id}</span></p>
+                </div>
+
+                {/* Requirements */}
+                {job.requirements && (
+                  <div className="mb-6">
+                    <h3 className="text-base font-bold text-black mb-3">
+                      Tələblər
+                    </h3>
+                    <div className="text-gray-700 whitespace-pre-line">
+                      {job.requirements}
+                    </div>
+                  </div>
+                )}
+
+                {/* Benefits */}
+                {job.benefits && (
+                  <div>
+                    <h3 className="text-base font-bold text-black mb-3">
+                      Təklif olunanlar
+                    </h3>
+                    <div className="text-gray-700 whitespace-pre-line">
+                      {job.benefits}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Job Info */}
-          <div className="p-6 md:p-8">
-            {/* Title & Category */}
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <span className={`px-3 py-1 ${categoryConfig?.bgColor} ${categoryConfig?.color} text-sm font-medium rounded-full`}>
-                  {categoryConfig?.nameAz}
-                </span>
-                <span className="text-sm text-gray-500">
-                  {formatDate(job.created_at)}
-                </span>
-              </div>
-
-              <h1 className="text-2xl md:text-3xl font-bold text-black mb-4">
-                {job.title}
-              </h1>
-
-              {/* Key Info Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="flex items-center gap-2 text-gray-700">
-                  <MapPinIcon className="w-5 h-5 text-gray-400" />
-                  <span className="font-medium">{job.location}</span>
-                </div>
-
-                <div className="flex items-center gap-2 text-gray-700">
-                  <BanknotesIcon className="w-5 h-5 text-gray-400" />
-                  <span className="font-bold text-black">{job.salary}</span>
-                </div>
-
-                {job.employment_type && (
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <BriefcaseIcon className="w-5 h-5 text-gray-400" />
-                    <span>İş rejimi: <span className="font-medium">{job.employment_type}</span></span>
-                  </div>
-                )}
-
-                {job.experience && (
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <UserGroupIcon className="w-5 h-5 text-gray-400" />
-                    <span>Təcrübə: <span className="font-medium">{job.experience}</span></span>
-                  </div>
-                )}
-
-                {job.education && (
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                    </svg>
-                    <span>Təhsil: <span className="font-medium">{job.education}</span></span>
-                  </div>
-                )}
-
-                {job.work_address && (
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <BuildingOfficeIcon className="w-5 h-5 text-gray-400" />
-                    <span>İş ünvanı: <span className="font-medium">{job.work_address}</span></span>
-                  </div>
-                )}
-
-                {job.start_date && (
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <CalendarIcon className="w-5 h-5 text-gray-400" />
-                    <span>Başlama: <span className="font-medium">{job.start_date}</span></span>
-                  </div>
-                )}
-
-                {job.duration && (
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <ClockIcon className="w-5 h-5 text-gray-400" />
-                    <span>Müddət: <span className="font-medium">{job.duration}</span></span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Description */}
-            <div className="mb-6">
-              <h2 className="text-lg font-bold text-black mb-3">
-                İşin təsviri
-              </h2>
-              <div className="text-gray-700 whitespace-pre-line leading-relaxed">
-                {job.description}
-              </div>
-            </div>
-
-            {/* Job ID */}
-            <div className="mb-6 pb-4 border-b border-gray-200">
-              <p className="text-xs text-gray-500">Elan ID: <span className="font-mono text-gray-600">{job.id}</span></p>
-            </div>
-
-            {/* Requirements */}
-            {job.requirements && (
-              <div className="mb-6">
-                <h3 className="text-base font-bold text-black mb-3">
-                  Tələblər
-                </h3>
-                <div className="text-gray-700 whitespace-pre-line">
-                  {job.requirements}
-                </div>
-              </div>
-            )}
-
-            {/* Benefits */}
-            {job.benefits && (
-              <div className="mb-6">
-                <h3 className="text-base font-bold text-black mb-3">
-                  Təklif olunanlar
-                </h3>
-                <div className="text-gray-700 whitespace-pre-line">
-                  {job.benefits}
-                </div>
-              </div>
-            )}
-
-            {/* Stats */}
-            <div className="flex items-center gap-4 text-sm text-gray-500 pb-6 border-b border-gray-200">
-              <span>{job.views_count} baxış</span>
-            </div>
-
-            {/* Contact Button */}
-            <div className="mt-6">
+          {/* Sidebar */}
+          <div className="lg:col-span-1">
+            {/* Contact Buttons */}
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-6 sticky top-6">
               {job.contact_name && (
                 <div className="mb-4 text-center">
                   <p className="text-sm text-gray-500 mb-1">Əlaqə şəxsi</p>
@@ -275,20 +318,15 @@ export default function ShortJobDetailPage() {
               )}
 
               {!showPhone ? (
-                <>
-                  <button
-                    onClick={() => setShowPhone(true)}
-                    className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-black text-white rounded-xl font-bold text-lg hover:bg-gray-800 transition-all active:scale-95"
-                  >
-                    <PhoneIcon className="w-6 h-6" />
-                    Əlaqə saxla
-                  </button>
-                  <p className="text-center text-sm text-gray-500 mt-3">
-                    Telefon nömrəsi gizlidir. Düyməyə klikləyin.
-                  </p>
-                </>
+                <button
+                  onClick={() => setShowPhone(true)}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-black text-white rounded-xl font-bold text-base hover:bg-gray-800 transition-all active:scale-95 mb-4"
+                >
+                  <PhoneIcon className="w-5 h-5" />
+                  Əlaqə
+                </button>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-3 mb-4">
                   <a
                     href={`tel:${job.contact_phone}`}
                     className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-black text-white rounded-xl font-bold text-base hover:bg-gray-800 transition-all active:scale-95"
@@ -309,6 +347,13 @@ export default function ShortJobDetailPage() {
                   </a>
                 </div>
               )}
+
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center justify-between text-gray-600">
+                  <span>Baxış sayı</span>
+                  <span className="font-semibold text-black">{job.views_count}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
