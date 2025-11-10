@@ -50,7 +50,16 @@ export async function getPendingJobs() {
 
   const { data, error } = await supabase
     .from('jobs')
-    .select('*')
+    .select(`
+      *,
+      category_info:category (
+        id,
+        name,
+        name_az,
+        image_url,
+        image_alt
+      )
+    `)
     .eq('status', 'pending_review')
     .order('created_at', { ascending: false })
 
@@ -76,7 +85,16 @@ export async function getAllJobs(statusFilter?: 'all' | 'active' | 'pending_revi
 
   let query = supabase
     .from('jobs')
-    .select('*')
+    .select(`
+      *,
+      category_info:category (
+        id,
+        name,
+        name_az,
+        image_url,
+        image_alt
+      )
+    `)
     .order('created_at', { ascending: false })
 
   // Применить фильтр если указан

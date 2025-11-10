@@ -171,6 +171,8 @@ export default function GundelikIslerPage() {
                 id={job.id}
                 title={job.title}
                 category={job.category as any}
+                categoryName={(job as any).category_info?.name}
+                categoryImageUrl={(job as any).category_info?.image_url}
                 location={job.location}
                 salary={job.salary || ''}
                 startDate={job.start_date || ''}

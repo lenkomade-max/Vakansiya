@@ -372,6 +372,8 @@ export default function HomePage() {
                   location={job.location}
                   salary={job.salary}
                   postedAt={new Date(job.created_at).toLocaleDateString('az-AZ')}
+                  categoryName={(job as any).category_info?.name}
+                  categoryImageUrl={(job as any).category_info?.image_url}
                   category={job.category as any}
                   isRemote={job.location.toLowerCase().includes('distant') || job.location.toLowerCase().includes('uzaqdan')}
                   isVIP={job.is_vip}
@@ -410,6 +412,8 @@ export default function HomePage() {
                   id={job.id}
                   title={job.title}
                   category={job.category as any}
+                  categoryName={(job as any).category_info?.name}
+                  categoryImageUrl={(job as any).category_info?.image_url}
                   location={job.location}
                   salary={job.salary || ''}
                   startDate={job.start_date || ''}

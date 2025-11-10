@@ -49,7 +49,7 @@ export const ShortJobCard: React.FC<ShortJobCardProps> = ({
   const cardContent = (
     <div className="bg-white rounded-xl overflow-hidden border border-gray-200 hover:border-gray-400 hover:shadow-lg transition-all duration-200 cursor-pointer group">
       {/* Фото категории с badges */}
-      <div className="relative w-full h-32 bg-gray-50 rounded-t-xl overflow-hidden">
+      <div className="relative aspect-square bg-gray-50 rounded-t-xl overflow-hidden">
         {/* Изображение категории или иконка */}
         {categoryImage ? (
           <Image

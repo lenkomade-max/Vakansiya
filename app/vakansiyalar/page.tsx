@@ -203,6 +203,8 @@ export default function VakansiyalarPage() {
                 location={job.location}
                 salary={job.salary}
                 postedAt={new Date(job.created_at).toLocaleDateString('az-AZ')}
+                categoryName={(job as any).category_info?.name}
+                categoryImageUrl={(job as any).category_info?.image_url}
                 category={job.category as any}
                 isRemote={job.location.toLowerCase().includes('distant') || job.location.toLowerCase().includes('uzaqdan')}
                 isVIP={job.is_vip}

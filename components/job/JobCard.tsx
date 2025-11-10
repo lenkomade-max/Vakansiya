@@ -78,7 +78,7 @@ export const JobCard: React.FC<JobCardProps> = ({
       className="bg-white rounded-xl overflow-hidden border border-gray-200 hover:border-gray-400 hover:shadow-lg transition-all duration-200 cursor-pointer group"
     >
       {/* Фото категории с badges НА нем */}
-      <div className="relative w-full h-32 bg-gray-100 rounded-t-xl overflow-hidden">
+      <div className="relative aspect-square bg-gray-100 rounded-t-xl overflow-hidden">
         {/* Изображение категории или лого компании */}
         {categoryImage ? (
           <Image
@@ -93,12 +93,12 @@ export const JobCard: React.FC<JobCardProps> = ({
             <img
               src={logo}
               alt={company}
-              className="w-16 h-16 object-contain"
+              className="w-20 h-20 object-contain"
             />
           </div>
         ) : (
           <div className={`w-full h-full ${categoryColors[category]} flex items-center justify-center`}>
-            <span className="text-4xl font-bold text-gray-400">
+            <span className="text-5xl font-bold text-gray-400">
               {company.charAt(0)}
             </span>
           </div>

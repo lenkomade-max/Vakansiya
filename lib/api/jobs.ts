@@ -300,7 +300,10 @@ export async function getActiveJobs(jobType?: JobType): Promise<Job[]> {
       *,
       category_info:category (
         id,
+        name,
         name_az,
+        image_url,
+        image_alt,
         parent:parent_id (
           name_az
         )
@@ -356,7 +359,10 @@ export async function getActiveJobsPaginated(params: {
       *,
       category_info:category (
         id,
+        name,
         name_az,
+        image_url,
+        image_alt,
         parent:parent_id (
           name_az
         )
