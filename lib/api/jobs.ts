@@ -244,8 +244,10 @@ export async function getJob(jobId: string): Promise<Job | null> {
         image_url,
         image_alt,
         parent_id,
-        parent:categories!parent_id (
-          name_az
+        parent_category:categories!parent_id (
+          id,
+          name_az,
+          image_url
         )
       )
     `)
@@ -261,7 +263,7 @@ export async function getJob(jobId: string): Promise<Job | null> {
   const job = {
     ...data,
     category_name: (data as any).category_info?.name_az,
-    parent_category_name: (data as any).category_info?.parent?.name_az || (data as any).category_info?.name_az,
+    parent_category_name: (data as any).category_info?.parent_category?.name_az || (data as any).category_info?.name_az,
   }
 
   return job
@@ -324,8 +326,11 @@ export async function getActiveJobs(jobType?: JobType): Promise<Job[]> {
         name_az,
         image_url,
         image_alt,
-        parent:categories!parent_id (
-          name_az
+        parent_id,
+        parent_category:categories!parent_id (
+          id,
+          name_az,
+          image_url
         )
       )
     `)
@@ -347,7 +352,7 @@ export async function getActiveJobs(jobType?: JobType): Promise<Job[]> {
   const jobs = (data || []).map((job: any) => ({
     ...job,
     category_name: job.category_info?.name_az,
-    parent_category_name: job.category_info?.parent?.name_az || job.category_info?.name_az,
+    parent_category_name: job.category_info?.parent_category?.name_az || job.category_info?.name_az,
   }))
 
   return jobs
@@ -383,8 +388,11 @@ export async function getActiveJobsPaginated(params: {
         name_az,
         image_url,
         image_alt,
-        parent:categories!parent_id (
-          name_az
+        parent_id,
+        parent_category:categories!parent_id (
+          id,
+          name_az,
+          image_url
         )
       )
     `, { count: 'exact' })
@@ -429,7 +437,7 @@ export async function getActiveJobsPaginated(params: {
   const jobs = (data || []).map((job: any) => ({
     ...job,
     category_name: job.category_info?.name_az,
-    parent_category_name: job.category_info?.parent?.name_az || job.category_info?.name_az,
+    parent_category_name: job.category_info?.parent_category?.name_az || job.category_info?.name_az,
   }))
 
   const total = count || 0

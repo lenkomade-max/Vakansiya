@@ -35,3 +35,13 @@ next-env.d.ts
 
 # macOS AppleDouble
 ._*
+
+# temp files
+.temp_macos_files/
+
+# documentation
+/docs/
+PROJECT_STRUCTURE.md
+
+# tests
+/tests/

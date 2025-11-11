@@ -273,38 +273,60 @@ export default function HomePage() {
     router.push(`/vakansiyalar/${jobId}`)
   }
 
-  const handleCategorySelect = (categoryNameAz: string) => {
+  const handleCategorySelect = async (categoryNameAz: string) => {
     console.log('[handleCategorySelect] Selected category:', categoryNameAz)
     setSelectedCategory(categoryNameAz)
     setActiveFilters(null) // Сбрасываем фильтры при выборе категории
+    setLoading(true)
 
-    // Фильтруем по parent_category_name (название главной категории из БД)
+    // НОВАЯ ЛОГИКА: Фильтруем по category.parent_id
+    // Находим parent_id категории и показываем только вакансии из подкатегорий
     if (activeTab === 'vakansiyalar') {
       if (!categoryNameAz) {
         setJobs(allJobs) // Показываем все
       } else {
-        console.log('[handleCategorySelect] All jobs count:', allJobs.length)
-        console.log('[handleCategorySelect] Sample job parent_category_name:', allJobs[0]?.parent_category_name)
-        const filtered = allJobs.filter(job => {
-          const match = job.parent_category_name?.toLowerCase() === categoryNameAz.toLowerCase()
-          if (!match && allJobs.indexOf(job) < 3) {
-            console.log('[handleCategorySelect] Job parent_category_name:', job.parent_category_name, 'Expected:', categoryNameAz)
-          }
-          return match
-        })
-        console.log('[handleCategorySelect] Filtered jobs count:', filtered.length)
-        setJobs(filtered)
+        // Находим главную категорию по name_az
+        const parentCategory = vakansiyaCategories.find(
+          cat => cat.name_az?.toLowerCase() === categoryNameAz.toLowerCase()
+        )
+
+        if (parentCategory) {
+          console.log('[handleCategorySelect] Parent category ID:', parentCategory.id)
+
+          // Фильтруем вакансии где category_info.parent_id === выбранная категория
+          const filtered = allJobs.filter(job => {
+            const categoryInfo = (job as any).category_info
+            const matchesParent = categoryInfo?.parent_id === parentCategory.id
+            return matchesParent
+          })
+
+          console.log('[handleCategorySelect] Filtered jobs count:', filtered.length)
+          setJobs(filtered)
+        } else {
+          setJobs([])
+        }
       }
     } else {
       if (!categoryNameAz) {
         setShortJobs(allShortJobs) // Показываем все
       } else {
-        const filtered = allShortJobs.filter(job =>
-          job.parent_category_name?.toLowerCase() === categoryNameAz.toLowerCase()
+        const parentCategory = gundelikCategories.find(
+          cat => cat.name_az?.toLowerCase() === categoryNameAz.toLowerCase()
         )
-        setShortJobs(filtered)
+
+        if (parentCategory) {
+          const filtered = allShortJobs.filter(job => {
+            const categoryInfo = (job as any).category_info
+            return categoryInfo?.parent_id === parentCategory.id
+          })
+          setShortJobs(filtered)
+        } else {
+          setShortJobs([])
+        }
       }
     }
+
+    setLoading(false)
   }
 
   return (
