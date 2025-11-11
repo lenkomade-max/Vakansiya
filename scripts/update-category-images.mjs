@@ -13,73 +13,73 @@ console.log('🔄 ОБНОВЛЕНИЕ IMAGE_URL В БД\n')
 // Маппинг: название категории (en) → файл
 const categoryImageMapping = {
   // IT & Technology
-  'FrontendDev': 'frontend-developer.png',
-  'BackendDev': 'backend-developer.png',
-  'FullStackDev': 'fullstack-developer.png',
-  'MobileDev': 'mobile-developer.png',
-  'DevOps': 'devops.png',
-  'QAEngineer': 'qa-engineer.png',
-  'DataAnalyst': 'data-analyst.png',
-  'SystemAdmin': 'system-admin.png',
-  'ITSupport': 'it-support.png',
+  'FrontendDev': 'developer.jpeg',
+  'BackendDev': 'developer.jpeg',
+  'FullStackDev': 'developer.jpeg',
+  'MobileDev': 'developer.jpeg',
+  'DevOps': 'developer.jpeg',
+  'QAEngineer': 'developer.jpeg',
+  'DataAnalyst': 'data-analyst.jpeg',
+  'SystemAdmin': 'it-support.jpeg',
+  'ITSupport': 'it-support.jpeg',
 
   // Sales
-  'SalesManager': 'sales-manager.png',
-  'Cashier': 'cashier.png',
+  'SalesManager': 'sales.jpeg',
+  'Cashier': 'cashier.jpeg',
 
   // Marketing
   'MarketingManager': 'marketing.png',
   'SMMManager': 'smm.png',
-  'ContentManager': 'content-manager.png',
+  'ContentManager': 'office.jpeg',
 
   // Healthcare
-  'Doctor': 'doctor.png',
-  'Nurse': 'nurse.png',
-  'Pharmacist': 'pharmacist.png',
+  'Doctor': 'doctor.jpeg',
+  'Nurse': 'doctor.jpeg',
+  'Pharmacist': 'pharmacist.jpeg',
 
   // Education
   'Teacher': 'teacher.png',
-  'Tutor': 'tutor.png',
-  'LanguageTeacher': 'language-teacher.png',
+  'Tutor': 'teacher.png',
+  'LanguageTeacher': 'teacher.png',
   'Translator': 'translator.png',
 
   // Finance
-  'Accountant': 'accountant.png',
+  'Accountant': 'accountant.jpeg',
 
   // Construction
-  'Engineer': 'engineer.png',
-  'Electrician': 'electrician.png',
+  'Engineer': 'engineer.jpeg',
+  'Electrician': 'electrician.jpeg',
 
   // Restaurant
-  'Chef': 'chef.png',
+  'Chef': 'chef.jpeg',
   'Waiter': 'waiter.png',
-  'Barista': 'barista.png',
+  'Barista': 'barista.jpeg',
 
   // Transport
   'Driver': 'driver.png',
-  'Courier': 'courier.png',
+  'Courier': 'courier.jpeg',
 
   // Admin
-  'OfficeManager': 'office-manager.png',
-  'Secretary': 'secretary.png',
-  'Receptionist': 'receptionist.png',
+  'OfficeManager': 'office-manager.jpeg',
+  'Secretary': 'office.jpeg',
+  'Receptionist': 'receptionist.jpeg',
 
   // Design
-  'GraphicDesigner': 'graphic-designer.png',
-  'UXUIDesigner': 'ux-ui-designer.png',
+  'GraphicDesigner': 'designer.jpeg',
+  'UXUIDesigner': 'ux-designer.jpeg',
 
   // Other
-  'Security': 'security.png',
-  'Cleaner': 'cleaner.png',
-  'Photographer': 'photographer.png',
+  'Security': 'security.jpeg',
+  'Cleaner': 'cleaning.jpeg',
+  'Photographer': 'photographer.jpeg',
 
   // Short jobs
-  'Cleaning': 'cleaning.png',
-  'Cooking': 'cooking.png',
+  'Cleaning': 'cleaning.jpeg',
+  'Cooking': 'chef.jpeg',
   'Event': 'event.png',
-  'Promotion': 'promotion.png',
-  'Loading': 'loading.png',
-  'Packing': 'packing.png',
+  'Promotion': 'sales.jpeg',
+  'Loading': 'warehouse.jpeg',
+  'Packing': 'warehouse.jpeg',
 }
 
 // 1. Получаем список файлов в Storage
