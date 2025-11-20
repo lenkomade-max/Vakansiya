@@ -16,7 +16,7 @@ export default async function HomePage() {
     getActiveJobsPaginated({
       jobType: 'vakansiya',
       page: 1,
-      limit: 15
+      limit: 16  // 4 ряда по 4 (десктоп) или 8 рядов по 2 (мобильный)
     })
   ])
 

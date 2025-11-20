@@ -12,6 +12,7 @@ import { signInWithGoogle, getCurrentUser } from '@/lib/auth'
 import { getActiveJobsPaginated, Job as DBJob } from '@/lib/api/jobs'
 import { Category } from '@/lib/api/categories'
 import { SearchFilters } from '@/components/ui/SearchBar'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
 type HomePageClientProps = {
     initialJobs: DBJob[]
@@ -54,7 +55,7 @@ export default function HomePageClient({
         const gundelikResult = await getActiveJobsPaginated({
             jobType: 'gundelik',
             page: 1,
-            limit: 10  // Достаточно для первого экрана
+            limit: 8  // 4 ряда по 2 (мобильный) или 2 ряда по 4 (десктоп)
         })
 
         setShortJobs(gundelikResult.jobs)
@@ -81,7 +82,7 @@ export default function HomePageClient({
                     loadMore()
                 }
             },
-            { threshold: 0.5 }  // Увеличили с 0.1 до 0.5 чтобы не триггерить слишком рано
+            { threshold: 0.1 }  // Грузим заранее когда пользователь на 90% доскроллил
         )
 
         if (observerTarget.current) {
@@ -105,7 +106,7 @@ export default function HomePageClient({
             const result = await getActiveJobsPaginated({
                 jobType: 'vakansiya',
                 page: nextPage,
-                limit: 10,
+                limit: 8,
                 // Применяем активные фильтры (если есть)
                 location: activeFilters?.location || undefined,
                 employmentType: activeFilters?.employmentType || undefined,
@@ -136,7 +137,7 @@ export default function HomePageClient({
             const result = await getActiveJobsPaginated({
                 jobType: 'gundelik',
                 page: nextPage,
-                limit: 10,
+                limit: 8,
                 // Применяем активные фильтры (если есть)
                 location: activeFilters?.location || undefined,
                 employmentType: activeFilters?.employmentType || undefined,
@@ -324,8 +325,8 @@ export default function HomePageClient({
                         <button
                             onClick={() => setActiveTab('vakansiyalar')}
                             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all ${activeTab === 'vakansiyalar'
-                                    ? 'bg-white text-black shadow-sm'
-                                    : 'text-gray-600 hover:text-black'
+                                ? 'bg-white text-black shadow-sm'
+                                : 'text-gray-600 hover:text-black'
                                 }`}
                         >
                             <BriefcaseIcon className="w-5 h-5" />
@@ -337,8 +338,8 @@ export default function HomePageClient({
                                 loadGundelikData() // Lazy load при переключении
                             }}
                             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all ${activeTab === 'gundelik'
-                                    ? 'bg-white text-black shadow-sm'
-                                    : 'text-gray-600 hover:text-black'
+                                ? 'bg-white text-black shadow-sm'
+                                : 'text-gray-600 hover:text-black'
                                 }`}
                         >
                             <ClockIcon className="w-5 h-5" />
@@ -387,12 +388,8 @@ export default function HomePageClient({
                     </div>
 
                     {/* Loading indicator + Observer target */}
-                    <div ref={observerTarget} className="py-8 text-center">
-                        {loading && (
-                            <div className="inline-block">
-                                <div className="w-8 h-8 border-4 border-gray-300 border-t-black rounded-full animate-spin"></div>
-                            </div>
-                        )}
+                    <div ref={observerTarget} className="py-4">
+                        {loading && <LoadingSpinner />}
                     </div>
                 </div>
             </section>
