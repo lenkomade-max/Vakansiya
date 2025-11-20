@@ -3,13 +3,13 @@ import { redirect } from 'next/navigation'
 import VakansiyaDetailClient from '@/components/VakansiyaDetail/VakansiyaDetailClient'
 
 type Props = {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function VakansiyaDetailPage({ params }: Props) {
-  const jobId = params.id
+  const { id: jobId } = await params
 
   // Загружаем данные на сервере
   const vakansiya = await getJob(jobId)
