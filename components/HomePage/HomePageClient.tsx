@@ -22,6 +22,7 @@ import FooterCTA from '@/components/tapla/FooterCTA'
 
 type HomePageClientProps = {
     initialJobs: DBJob[]
+    initialShortJobs: DBJob[]
     initialCities: string[]
     initialVakansiyaCategories: Category[]
     initialGundelikCategories: Category[]
@@ -29,6 +30,7 @@ type HomePageClientProps = {
 
 export default function HomePageClient({
     initialJobs,
+    initialShortJobs,
     initialCities,
     initialVakansiyaCategories,
     initialGundelikCategories
@@ -36,9 +38,9 @@ export default function HomePageClient({
     const router = useRouter()
     const [activeTab, setActiveTab] = useState<'vakansiyalar' | 'gundelik'>('vakansiyalar')
     const [jobs, setJobs] = useState<DBJob[]>(initialJobs)
-    const [shortJobs, setShortJobs] = useState<DBJob[]>([])
+    const [shortJobs, setShortJobs] = useState<DBJob[]>(initialShortJobs)
     const [allJobs, setAllJobs] = useState<DBJob[]>(initialJobs) // Все вакансии (для фильтрации)
-    const [allShortJobs, setAllShortJobs] = useState<DBJob[]>([]) // Все gundəlik (для фильтрации)
+    const [allShortJobs, setAllShortJobs] = useState<DBJob[]>(initialShortJobs) // Все gundəlik (для фильтрации)
     const [selectedCategory, setSelectedCategory] = useState<string>('')
     const [cities] = useState<string[]>(initialCities)
     const [vakansiyaCategories] = useState<Category[]>(initialVakansiyaCategories)
@@ -48,28 +50,9 @@ export default function HomePageClient({
     const [loading, setLoading] = useState(false)
     const [hasMore, setHasMore] = useState(true)
     const [isAuthenticated, setIsAuthenticated] = useState(false)
-    const [gundelikLoaded, setGundelikLoaded] = useState(false) // Флаг для lazy loading
     const [activeFilters, setActiveFilters] = useState<SearchFilters | null>(null) // Активные фильтры для серверной фильтрации
+    const [tabLoading, setTabLoading] = useState(false) // Анимация загрузки при переключении вкладки
     const observerTarget = useRef(null)
-
-    // Lazy loading для Gündəlik işlər - грузим только при клике на вкладку
-    const loadGundelikData = async () => {
-        if (gundelikLoaded) return // Уже загружены
-
-        setLoading(true)
-
-        const gundelikResult = await getActiveJobsPaginated({
-            jobType: 'gundelik',
-            page: 1,
-            limit: 8  // 4 ряда по 2 (мобильный) или 2 ряда по 4 (десктоп)
-        })
-
-        setShortJobs(gundelikResult.jobs)
-        setAllShortJobs(gundelikResult.jobs)
-        setGundelikLoaded(true)
-
-        setLoading(false)
-    }
 
     // Check authentication status
     useEffect(() => {
@@ -375,8 +358,12 @@ export default function HomePageClient({
                             </button>
                             <button
                                 onClick={() => {
-                                    setActiveTab('gundelik')
-                                    loadGundelikData() // Lazy load при переключении
+                                    // Показываем анимацию загрузки при переключении
+                                    setTabLoading(true)
+                                    setTimeout(() => {
+                                        setActiveTab('gundelik')
+                                        setTabLoading(false)
+                                    }, 300) // Небольшая задержка для плавности
                                 }}
                                 className={`flex-1 flex items-center justify-center gap-2 px-5 py-4 rounded-lg font-bold text-base transition-all ${activeTab === 'gundelik'
                                     ? 'bg-white text-black shadow-sm'
@@ -460,25 +447,32 @@ export default function HomePageClient({
                         </a>
                     </div>
 
-                    {/* СЕТКА: 2 колонки на мобилке, 3-4 на десктопе */}
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
-                        {shortJobs.map((job) => (
-                            <ShortJobCard
-                                key={job.id}
-                                id={job.id}
-                                title={job.title}
-                                category={job.category as any}
-                                categoryName={(job as any).category_info?.name}
-                                categoryImageUrl={(job as any).category_info?.image_url}
-                                location={job.location}
-                                salary={job.salary || ''}
-                                startDate={job.start_date || ''}
-                                duration={job.duration}
-                                isVIP={job.is_vip}
-                                isUrgent={job.is_urgent}
-                            />
-                        ))}
-                    </div>
+                    {/* Анимация загрузки при переключении вкладки */}
+                    {tabLoading ? (
+                        <div className="flex justify-center items-center py-12">
+                            <LoadingSpinner />
+                        </div>
+                    ) : (
+                        /* СЕТКА: 2 колонки на мобилке, 3-4 на десктопе */
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
+                            {shortJobs.map((job) => (
+                                <ShortJobCard
+                                    key={job.id}
+                                    id={job.id}
+                                    title={job.title}
+                                    category={job.category as any}
+                                    categoryName={(job as any).category_info?.name}
+                                    categoryImageUrl={(job as any).category_info?.image_url}
+                                    location={job.location}
+                                    salary={job.salary || ''}
+                                    startDate={job.start_date || ''}
+                                    duration={job.duration}
+                                    isVIP={job.is_vip}
+                                    isUrgent={job.is_urgent}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
             </section>
 
