@@ -53,7 +53,7 @@ export default function CareerSection() {
     const handlePostJob = async () => {
         const user = await getCurrentUser()
         if (!user) {
-            alert('Elan yerləşdirmək üçün daxil olmalısınız')
+            router.push('/auth/callback?next=/post-job')
             return
         }
         router.push('/post-job')
