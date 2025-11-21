@@ -13,6 +13,11 @@ import { getActiveJobsPaginated, Job as DBJob } from '@/lib/api/jobs'
 import { Category } from '@/lib/api/categories'
 import { SearchFilters } from '@/components/ui/SearchBar'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import HeroSlogan from '@/components/tapla/HeroSlogan'
+import AnimatedJobFeed from '@/components/tapla/AnimatedJobFeed'
+import Marquee from '@/components/tapla/Marquee'
+import CareerSection from '@/components/tapla/CareerSection'
+import FooterCTA from '@/components/tapla/FooterCTA'
 
 type HomePageClientProps = {
     initialJobs: DBJob[]
@@ -317,37 +322,58 @@ export default function HomePageClient({
             {/* Hero Section */}
             <section className="bg-white py-6 md:py-10">
                 <div className="container mx-auto px-4 max-w-7xl">
-                    {/* Поиск */}
-                    <SearchBar onSearch={handleSearch} cities={cities} />
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-                    {/* Табы - переключение между Vakansiyalar и Gündəlik işlər */}
-                    <div className="mt-6 flex items-center gap-2 bg-gray-100 p-1 rounded-xl max-w-md mx-auto">
-                        <button
-                            onClick={() => setActiveTab('vakansiyalar')}
-                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all ${activeTab === 'vakansiyalar'
-                                ? 'bg-white text-black shadow-sm'
-                                : 'text-gray-600 hover:text-black'
-                                }`}
-                        >
-                            <BriefcaseIcon className="w-5 h-5" />
-                            Vakansiyalar
-                        </button>
-                        <button
-                            onClick={() => {
-                                setActiveTab('gundelik')
-                                loadGundelikData() // Lazy load при переключении
-                            }}
-                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all ${activeTab === 'gundelik'
-                                ? 'bg-white text-black shadow-sm'
-                                : 'text-gray-600 hover:text-black'
-                                }`}
-                        >
-                            <ClockIcon className="w-5 h-5" />
-                            Gündəlik İş
-                        </button>
+                        {/* Левая часть: Слоган + Поиск */}
+                        <div className="lg:col-span-7">
+                            {/* Слоган */}
+                            <HeroSlogan />
+
+                            {/* Поиск */}
+                            <SearchBar onSearch={handleSearch} cities={cities} />
+
+                            {/* Табы - переключение между Vakansiyalar и Gündəlik işlər */}
+                            <div className="mt-6 flex items-center gap-2 bg-gray-100 p-1 rounded-xl max-w-md">
+                                <button
+                                    onClick={() => setActiveTab('vakansiyalar')}
+                                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all ${activeTab === 'vakansiyalar'
+                                        ? 'bg-white text-black shadow-sm'
+                                        : 'text-gray-600 hover:text-black'
+                                        }`}
+                                >
+                                    <BriefcaseIcon className="w-5 h-5" />
+                                    Vakansiyalar
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setActiveTab('gundelik')
+                                        loadGundelikData() // Lazy load при переключении
+                                    }}
+                                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all ${activeTab === 'gundelik'
+                                        ? 'bg-white text-black shadow-sm'
+                                        : 'text-gray-600 hover:text-black'
+                                        }`}
+                                >
+                                    <ClockIcon className="w-5 h-5" />
+                                    Gündəlik İş
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Правая часть: Animated Feed (скрыт на мобильных) */}
+                        <div className="lg:col-span-5">
+                            <AnimatedJobFeed
+                                vakansiyalar={jobs.slice(0, 6)}
+                                gundelik={gundelikLoaded ? shortJobs.slice(0, 6) : []}
+                            />
+                        </div>
+
                     </div>
                 </div>
             </section>
+
+            {/* Marquee */}
+            <Marquee />
 
             {/* Category Dashboard */}
             <CategoryDashboard
@@ -387,12 +413,30 @@ export default function HomePageClient({
                         ))}
                     </div>
 
-                    {/* Loading indicator + Observer target */}
-                    <div ref={observerTarget} className="py-4">
-                        {loading && <LoadingSpinner />}
-                    </div>
+                    {/* Кнопка "Показать больше" (после 30 вакансий) */}
+                    {jobs.length >= 30 && hasMore && (
+                        <div className="text-center py-8">
+                            <button
+                                onClick={loadMore}
+                                disabled={loading}
+                                className="px-8 py-4 bg-black text-white font-bold rounded-full hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {loading ? 'Yüklənir...' : 'Daha çox göstər'}
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Observer для автозагрузки (если меньше 30) */}
+                    {jobs.length < 30 && (
+                        <div ref={observerTarget} className="py-4">
+                            {loading && <LoadingSpinner />}
+                        </div>
+                    )}
                 </div>
             </section>
+
+            {/* Career Section (только для vakansiyalar) */}
+            {activeTab === 'vakansiyalar' && jobs.length >= 30 && <CareerSection />}
 
             {/* Gündəlik İşlər - показываем только если выбран таб gundelik */}
             <section className={`py-6 md:py-12 bg-white ${activeTab !== 'gundelik' ? 'hidden' : ''}`}>
@@ -443,6 +487,9 @@ export default function HomePageClient({
                     </button>
                 </div>
             </section>
+
+            {/* Footer CTA */}
+            <FooterCTA />
 
             {/* Footer */}
             <footer className="bg-white border-t border-gray-200 py-8 md:py-12">

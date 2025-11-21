@@ -170,6 +170,20 @@
   .animate-on-scroll.visible {
     @apply opacity-100 translate-y-0;
   }
+
+  /* Marquee анимация */
+  @keyframes marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
 }
 
 /* Темная тема (опционально) */
