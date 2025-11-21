@@ -421,7 +421,7 @@ export default function HomePageClient({
 
                     {/* Кнопка "Показать больше" (после 30 вакансий) */}
                     {jobs.length >= 30 && hasMore && (
-                        <div className="text-center py-8">
+                        <div className="text-center py-4">
                             <button
                                 onClick={loadMore}
                                 disabled={loading}
