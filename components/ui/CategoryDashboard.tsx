@@ -154,12 +154,12 @@ export const CategoryDashboard: React.FC<CategoryDashboardProps> = ({
   return (
     <div className="w-full bg-white py-8 border-b border-gray-100">
       <div className="container mx-auto px-4 max-w-7xl">
-        {/* Grid: 2 columns mobile, 4 columns desktop */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+        {/* Mobile: Horizontal scroll, Desktop: Grid */}
+        <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 md:pb-0 md:grid md:grid-cols-4 md:gap-8">
           {/* Кнопка "Hamısı" */}
           <button
             onClick={() => onCategorySelect('')}
-            className="flex flex-col items-center gap-3 group"
+            className="flex-shrink-0 flex flex-col items-center gap-3 group"
           >
             <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all ${!selectedCategory
                 ? 'bg-black shadow-lg'
@@ -184,7 +184,7 @@ export const CategoryDashboard: React.FC<CategoryDashboardProps> = ({
               <button
                 key={cat.id}
                 onClick={() => onCategorySelect(cat.name_az)}
-                className="flex flex-col items-center gap-3 group"
+                className="flex-shrink-0 flex flex-col items-center gap-3 group"
               >
                 <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all ${isSelected
                     ? 'bg-black shadow-lg'
@@ -193,7 +193,7 @@ export const CategoryDashboard: React.FC<CategoryDashboardProps> = ({
                   <Icon className={`w-4 h-4 md:w-5 md:h-5 ${isSelected ? 'text-white' : 'text-gray-700'
                     }`} />
                 </div>
-                <span className={`text-sm font-medium text-center leading-tight ${isSelected ? 'text-black font-bold' : 'text-gray-600'
+                <span className={`text-sm font-medium text-center leading-tight whitespace-nowrap ${isSelected ? 'text-black font-bold' : 'text-gray-600'
                   }`}>
                   {cat.name_az}
                 </span>
