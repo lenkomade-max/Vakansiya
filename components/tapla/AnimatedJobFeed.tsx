@@ -50,6 +50,11 @@ export default function AnimatedJobFeed({ vakansiyalar, gundelik }: AnimatedJobF
     const vakansiyaCards = vakansiyalar.slice(0, 6)
     const gundelikCards = gundelik.slice(0, 6)
 
+    // Если нет данных, не рендерим
+    if (vakansiyaCards.length === 0 || gundelikCards.length === 0) {
+        return null
+    }
+
     // Дублируем для бесконечного цикла
     const vakansiyaLoop = [...vakansiyaCards, ...vakansiyaCards, ...vakansiyaCards]
     const gundelikLoop = [...gundelikCards, ...gundelikCards, ...gundelikCards]

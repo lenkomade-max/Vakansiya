@@ -331,40 +331,13 @@ export default function HomePageClient({
 
                             {/* Поиск */}
                             <SearchBar onSearch={handleSearch} cities={cities} />
-
-                            {/* Табы - переключение между Vakansiyalar и Gündəlik işlər */}
-                            <div className="mt-6 flex items-center gap-2 bg-gray-100 p-1 rounded-xl max-w-md">
-                                <button
-                                    onClick={() => setActiveTab('vakansiyalar')}
-                                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all ${activeTab === 'vakansiyalar'
-                                        ? 'bg-white text-black shadow-sm'
-                                        : 'text-gray-600 hover:text-black'
-                                        }`}
-                                >
-                                    <BriefcaseIcon className="w-5 h-5" />
-                                    Vakansiyalar
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setActiveTab('gundelik')
-                                        loadGundelikData() // Lazy load при переключении
-                                    }}
-                                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all ${activeTab === 'gundelik'
-                                        ? 'bg-white text-black shadow-sm'
-                                        : 'text-gray-600 hover:text-black'
-                                        }`}
-                                >
-                                    <ClockIcon className="w-5 h-5" />
-                                    Gündəlik İş
-                                </button>
-                            </div>
                         </div>
 
                         {/* Правая часть: Animated Feed (скрыт на мобильных) */}
                         <div className="lg:col-span-5">
                             <AnimatedJobFeed
                                 vakansiyalar={jobs.slice(0, 6)}
-                                gundelik={gundelikLoaded ? shortJobs.slice(0, 6) : []}
+                                gundelik={shortJobs.length > 0 ? shortJobs.slice(0, 6) : jobs.slice(0, 6)}
                             />
                         </div>
 
@@ -383,6 +356,39 @@ export default function HomePageClient({
                 vakansiyaCategories={vakansiyaCategories}
                 gundelikCategories={gundelikCategories}
             />
+
+            {/* Табы - переключение между Vakansiyalar и Gündəlik işlər */}
+            <section className="bg-white py-4 border-b border-gray-100">
+                <div className="container mx-auto px-4 max-w-7xl">
+                    <div className="flex items-center justify-center">
+                        <div className="flex items-center gap-2 bg-gray-100 p-1.5 rounded-xl max-w-lg w-full md:w-auto">
+                            <button
+                                onClick={() => setActiveTab('vakansiyalar')}
+                                className={`flex-1 flex items-center justify-center gap-2 px-5 py-4 rounded-lg font-bold text-base transition-all ${activeTab === 'vakansiyalar'
+                                    ? 'bg-white text-black shadow-sm'
+                                    : 'text-gray-600 hover:text-black'
+                                    }`}
+                            >
+                                <BriefcaseIcon className="w-6 h-6" />
+                                Vakansiyalar
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setActiveTab('gundelik')
+                                    loadGundelikData() // Lazy load при переключении
+                                }}
+                                className={`flex-1 flex items-center justify-center gap-2 px-5 py-4 rounded-lg font-bold text-base transition-all ${activeTab === 'gundelik'
+                                    ? 'bg-white text-black shadow-sm'
+                                    : 'text-gray-600 hover:text-black'
+                                    }`}
+                            >
+                                <ClockIcon className="w-6 h-6" />
+                                Gündəlik İş
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             {/* Vakansiyalar - показываем только если выбран таб vakansiyalar */}
             <section className={`py-6 md:py-12 bg-gray-50 ${activeTab !== 'vakansiyalar' ? 'hidden' : ''}`}>
@@ -471,23 +477,6 @@ export default function HomePageClient({
             </section>
 
             {/* CTA Section */}
-            <section className="py-12 md:py-16 bg-black text-white">
-                <div className="container mx-auto px-4 max-w-7xl text-center">
-                    <h2 className="text-2xl md:text-4xl font-bold mb-3 md:mb-4">
-                        İşəgötürənsiniz?
-                    </h2>
-                    <p className="text-sm md:text-xl text-white/80 mb-6 md:mb-8">
-                        Vakansiyalarınızı yerləşdirin və minlərlə işaxtaran arasından uyğun namizədləri tapın
-                    </p>
-                    <button
-                        onClick={handlePostJob}
-                        className="px-6 md:px-8 py-3 md:py-4 bg-white text-black rounded-full font-semibold hover:bg-gray-100 transition-all text-sm md:text-base"
-                    >
-                        Pulsuz vakansiya yerləşdir →
-                    </button>
-                </div>
-            </section>
-
             {/* Footer CTA */}
             <FooterCTA />
 
