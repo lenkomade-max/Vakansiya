@@ -41,10 +41,9 @@ export interface CategoryDashboardProps {
   gundelikCategories?: Category[]
 }
 
-// Конфигурация иконок и цветов для категорий
+// Конфигурация иконок для категорий
 type CategoryConfig = {
   icon: React.ComponentType<{ className?: string }>
-  bgColor: string
 }
 
 export const CategoryDashboard: React.FC<CategoryDashboardProps> = ({
@@ -56,79 +55,79 @@ export const CategoryDashboard: React.FC<CategoryDashboardProps> = ({
 }) => {
   const categories = activeTab === 'vakansiyalar' ? vakansiyaCategories : gundelikCategories
 
-  // Маппинг категорий к иконкам и цветам
+  // Маппинг категорий к иконкам
   const getCategoryConfig = (name: string, nameAz: string): CategoryConfig => {
     const nameLower = name.toLowerCase()
     const nameAzLower = nameAz.toLowerCase()
 
     // Gündəlik İşlər
     if (nameLower.includes('transport') || nameAzLower.includes('nəqliyyat')) {
-      return { icon: TruckIcon, bgColor: 'bg-blue-500' }
+      return { icon: TruckIcon }
     }
     if (nameLower.includes('construction') || nameAzLower.includes('tikinti')) {
-      return { icon: WrenchScrewdriverIcon, bgColor: 'bg-orange-500' }
+      return { icon: WrenchScrewdriverIcon }
     }
     if (nameLower.includes('home') || nameAzLower.includes('ev xidmət')) {
-      return { icon: SparklesIcon, bgColor: 'bg-green-500' }
+      return { icon: SparklesIcon }
     }
     if (nameLower.includes('restaurant') || nameAzLower.includes('restoran')) {
-      return { icon: ShoppingBagIcon, bgColor: 'bg-pink-500' }
+      return { icon: ShoppingBagIcon }
     }
     if (nameLower.includes('warehouse') || nameAzLower.includes('anbar')) {
-      return { icon: BuildingOfficeIcon, bgColor: 'bg-purple-500' }
+      return { icon: BuildingOfficeIcon }
     }
     if (nameLower.includes('office') || nameAzLower.includes('ofis')) {
-      return { icon: BriefcaseIcon, bgColor: 'bg-indigo-500' }
+      return { icon: BriefcaseIcon }
     }
     if (nameLower.includes('creative') || nameAzLower.includes('yaradıcı')) {
-      return { icon: PaintBrushIcon, bgColor: 'bg-pink-500' }
+      return { icon: PaintBrushIcon }
     }
     if (nameLower.includes('education') || nameAzLower.includes('təhsil')) {
-      return { icon: AcademicCapIcon, bgColor: 'bg-yellow-500' }
+      return { icon: AcademicCapIcon }
     }
     if (nameLower.includes('health') || nameAzLower.includes('tibb') || nameAzLower.includes('gözəllik')) {
-      return { icon: HeartIcon, bgColor: 'bg-rose-500' }
+      return { icon: HeartIcon }
     }
     if (nameLower.includes('finance') || nameAzLower.includes('maliyyə')) {
-      return { icon: BanknotesIcon, bgColor: 'bg-emerald-500' }
+      return { icon: BanknotesIcon }
     }
 
     // Vakansiyalar
     if (nameLower.includes('it') || nameAzLower.includes('texnologiya')) {
-      return { icon: ComputerDesktopIcon, bgColor: 'bg-cyan-500' }
+      return { icon: ComputerDesktopIcon }
     }
     if (nameAzLower.includes('satış')) {
-      return { icon: ChartBarIcon, bgColor: 'bg-teal-500' }
+      return { icon: ChartBarIcon }
     }
     if (nameAzLower.includes('marketinq')) {
-      return { icon: MegaphoneIcon, bgColor: 'bg-violet-500' }
+      return { icon: MegaphoneIcon }
     }
     if (nameAzLower.includes('kadr') || nameLower.includes('hr')) {
-      return { icon: UserGroupIcon, bgColor: 'bg-fuchsia-500' }
+      return { icon: UserGroupIcon }
     }
 
     // Default
-    return { icon: EllipsisHorizontalIcon, bgColor: 'bg-gray-500' }
+    return { icon: EllipsisHorizontalIcon }
   }
 
   return (
-    <div className="w-full bg-white py-6 border-b border-gray-100">
+    <div className="w-full bg-white py-8 border-b border-gray-100">
       <div className="container mx-auto px-4 max-w-7xl">
-        {/* Mobile: Horizontal scroll, Desktop: Grid */}
-        <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 md:pb-0 md:grid md:grid-cols-4 lg:grid-cols-8">
+        {/* Grid: 2 columns mobile, 4 columns desktop */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
           {/* Кнопка "Hamısı" */}
           <button
             onClick={() => onCategorySelect('')}
-            className="flex-shrink-0 flex flex-col items-center gap-3 group"
+            className="flex flex-col items-center gap-3 group"
           >
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all ${!selectedCategory
-                ? 'bg-black shadow-lg scale-110'
-                : 'bg-gray-100 hover:bg-gray-200'
+            <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center transition-all ${!selectedCategory
+                ? 'bg-black shadow-lg'
+                : 'bg-gray-100 group-hover:bg-gray-200'
               }`}>
-              <BriefcaseIcon className={`w-7 h-7 ${!selectedCategory ? 'text-white' : 'text-gray-700'
+              <BriefcaseIcon className={`w-8 h-8 md:w-10 md:h-10 ${!selectedCategory ? 'text-white' : 'text-gray-700'
                 }`} />
             </div>
-            <span className={`text-xs font-medium text-center whitespace-nowrap ${!selectedCategory ? 'text-black font-bold' : 'text-gray-600'
+            <span className={`text-sm font-medium text-center ${!selectedCategory ? 'text-black font-bold' : 'text-gray-600'
               }`}>
               Hamısı
             </span>
@@ -144,16 +143,16 @@ export const CategoryDashboard: React.FC<CategoryDashboardProps> = ({
               <button
                 key={cat.id}
                 onClick={() => onCategorySelect(cat.name_az)}
-                className="flex-shrink-0 flex flex-col items-center gap-3 group"
+                className="flex flex-col items-center gap-3 group"
               >
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all ${isSelected
-                    ? 'bg-black shadow-lg scale-110'
-                    : `${config.bgColor} hover:scale-105`
+                <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center transition-all ${isSelected
+                    ? 'bg-black shadow-lg'
+                    : 'bg-gray-100 group-hover:bg-gray-200'
                   }`}>
-                  <Icon className={`w-7 h-7 ${isSelected ? 'text-white' : 'text-white'
+                  <Icon className={`w-8 h-8 md:w-10 md:h-10 ${isSelected ? 'text-white' : 'text-gray-700'
                     }`} />
                 </div>
-                <span className={`text-xs font-medium text-center whitespace-nowrap max-w-[80px] ${isSelected ? 'text-black font-bold' : 'text-gray-600'
+                <span className={`text-sm font-medium text-center leading-tight ${isSelected ? 'text-black font-bold' : 'text-gray-600'
                   }`}>
                   {cat.name_az}
                 </span>
