@@ -17,6 +17,7 @@ import HeroSlogan from '@/components/tapla/HeroSlogan'
 import AnimatedJobFeed from '@/components/tapla/AnimatedJobFeed'
 import Marquee from '@/components/tapla/Marquee'
 import CareerSection from '@/components/tapla/CareerSection'
+import WhyUsSection from '@/components/tapla/WhyUsSection'
 import FooterCTA from '@/components/tapla/FooterCTA'
 
 type HomePageClientProps = {
@@ -442,7 +443,12 @@ export default function HomePageClient({
             </section>
 
             {/* Career Section (только для vakansiyalar) */}
-            {activeTab === 'vakansiyalar' && jobs.length >= 30 && <CareerSection />}
+            {activeTab === 'vakansiyalar' && jobs.length >= 30 && (
+                <>
+                    <CareerSection />
+                    <WhyUsSection />
+                </>
+            )}
 
             {/* Gündəlik İşlər - показываем только если выбран таб gundelik */}
             <section className={`py-6 md:py-12 bg-white ${activeTab !== 'gundelik' ? 'hidden' : ''}`}>
