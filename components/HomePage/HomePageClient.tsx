@@ -19,6 +19,7 @@ import Marquee from '@/components/tapla/Marquee'
 import CareerSection from '@/components/tapla/CareerSection'
 import WhyUsSection from '@/components/tapla/WhyUsSection'
 import FooterCTA from '@/components/tapla/FooterCTA'
+import BanCheck from '@/components/BanCheck'
 
 type HomePageClientProps = {
     initialJobs: DBJob[]
@@ -296,6 +297,9 @@ export default function HomePageClient({
 
     return (
         <div className="min-h-screen bg-gray-50">
+            {/* Ban Check - redirects if user is banned */}
+            <BanCheck />
+
             {/* Навигация */}
             <Navigation
                 onLogin={handleLogin}
