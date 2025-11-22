@@ -473,8 +473,36 @@ export default function HomePageClient({
                             ))}
                         </div>
                     )}
+
+                    {/* Кнопка "Показать больше" (после 30 гунделиков) */}
+                    {shortJobs.length >= 30 && hasMore && (
+                        <div className="text-center py-4">
+                            <button
+                                onClick={loadMore}
+                                disabled={loading}
+                                className="px-8 py-4 bg-black text-white font-bold rounded-full hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {loading ? 'Yüklənir...' : 'Daha çox göstər'}
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Observer для автозагрузки (если меньше 30) */}
+                    {shortJobs.length < 30 && (
+                        <div ref={observerTarget} className="py-4">
+                            {loading && <LoadingSpinner />}
+                        </div>
+                    )}
                 </div>
             </section>
+
+            {/* Career Section (только для gundelik, после 30 объявлений) */}
+            {activeTab === 'gundelik' && shortJobs.length >= 30 && (
+                <>
+                    <CareerSection />
+                    <WhyUsSection />
+                </>
+            )}
 
             {/* CTA Section */}
             {/* Footer CTA */}
