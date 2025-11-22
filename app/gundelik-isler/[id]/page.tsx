@@ -20,5 +20,5 @@ export default async function GundelikDetailPage({ params }: Props) {
   }
 
   // Передаем данные в клиентский компонент
-  return <GundelikDetailClient initialJob={job} jobId={jobId} />
+  return <GundelikDetailClient initialGundelik={job} jobId={jobId} />
 }
