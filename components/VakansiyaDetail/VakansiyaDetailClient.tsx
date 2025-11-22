@@ -17,9 +17,11 @@ import {
     UserGroupIcon,
     BuildingOfficeIcon,
     ArrowLeftIcon,
-    PhoneIcon
+    PhoneIcon,
+    FlagIcon
 } from '@heroicons/react/24/outline'
 import { FireIcon } from '@heroicons/react/24/solid'
+import ComplaintModal from '@/components/ComplaintModal'
 
 type VakansiyaDetailClientProps = {
     initialVakansiya: Job
@@ -29,6 +31,7 @@ type VakansiyaDetailClientProps = {
 export default function VakansiyaDetailClient({ initialVakansiya, jobId }: VakansiyaDetailClientProps) {
     const router = useRouter()
     const [showPhone, setShowPhone] = useState(false)
+    const [showComplaintModal, setShowComplaintModal] = useState(false)
     const [vakansiya] = useState<Job>(initialVakansiya)
 
     // Auth check (клиентский)
@@ -461,10 +464,21 @@ export default function VakansiyaDetailClient({ initialVakansiya, jobId }: Vakan
                             </div>
 
                             <div className="mt-6 pt-4 border-t border-gray-200">
-                                <div className="flex items-center justify-between text-sm text-gray-600">
+                                <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
                                     <span>Baxış sayı</span>
                                     <span className="font-semibold text-black">{vakansiya.views_count}</span>
                                 </div>
+
+                                {/* Complaint Button */}
+                                {currentUser && (
+                                    <button
+                                        onClick={() => setShowComplaintModal(true)}
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors text-sm font-medium border border-red-200 hover:border-red-300"
+                                    >
+                                        <FlagIcon className="w-4 h-4" />
+                                        Şikayət et
+                                    </button>
+                                )}
                             </div>
                         </div>
 
@@ -547,6 +561,15 @@ export default function VakansiyaDetailClient({ initialVakansiya, jobId }: Vakan
                     </div>
                 </div>
             </footer>
+
+            {/* Complaint Modal */}
+            {showComplaintModal && currentUser && (
+                <ComplaintModal
+                    jobId={vakansiya.id}
+                    reporterId={currentUser.id}
+                    onClose={() => setShowComplaintModal(false)}
+                />
+            )}
         </div>
     )
 }
