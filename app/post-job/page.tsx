@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import Navigation from '@/components/ui/Navigation'
 import { getCurrentUser } from '@/lib/auth'
 import { createJob } from '@/lib/api/jobs'
+import { getExtendedProfile, ExtendedProfile } from '@/lib/api/anti-abuse/profile'
 import { getParentCategories, getSubcategories, getCities, Category } from '@/lib/api/categories'
 import { CATEGORIES, ShortJobCategory } from '@/components/short-jobs/CategoryIcons'
 import { PlusCircleIcon, BriefcaseIcon, ClockIcon } from '@heroicons/react/24/outline'
@@ -18,6 +19,7 @@ export default function PostJobPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState<any>(null)
+  const [userProfile, setUserProfile] = useState<ExtendedProfile | null>(null)
 
   // Categories and cities from DB
   const [vakansiyaParentCategories, setVakansiyaParentCategories] = useState<Category[]>([])
@@ -45,6 +47,8 @@ export default function PostJobPage() {
     benefits: '',
     contactName: '', // Имя контактного лица
     contactPhone: '',
+    employerPhone: '', // Для рекрутеров
+    termsAccepted: false, // Галочка для рекрутеров
   })
 
   // Форма для коротких работ
@@ -61,6 +65,8 @@ export default function PostJobPage() {
     description: '',
     contactName: '', // Имя контактного лица
     phoneNumber: '',
+    employerPhone: '', // Для рекрутеров
+    termsAccepted: false, // Галочка для рекрутеров
   })
 
   // Date picker state for gundelik start date
@@ -100,14 +106,14 @@ export default function PostJobPage() {
   }
 
   const handleVakansiyaChange = (field: string, value: string) => {
-    if (field === 'contactPhone') {
+    if (field === 'contactPhone' || field === 'employerPhone') {
       value = formatAzerbaijanPhone(value)
     }
     setVakansiyaForm(prev => ({ ...prev, [field]: value }))
   }
 
   const handleGundelikChange = (field: string, value: string) => {
-    if (field === 'phoneNumber') {
+    if (field === 'phoneNumber' || field === 'employerPhone') {
       value = formatAzerbaijanPhone(value)
     }
     setGundelikForm(prev => ({ ...prev, [field]: value }))
@@ -166,6 +172,19 @@ export default function PostJobPage() {
       const currentUser = await getCurrentUser()
       setIsAuthenticated(!!currentUser)
       setUser(currentUser)
+
+      // Load extended profile
+      if (currentUser) {
+        const profile = await getExtendedProfile(currentUser.id)
+        setUserProfile(profile)
+
+        // Pre-fill contact phone from profile
+        if (profile?.phone) {
+          const formattedPhone = formatAzerbaijanPhone(profile.phone)
+          setVakansiyaForm(prev => ({ ...prev, contactPhone: formattedPhone }))
+          setGundelikForm(prev => ({ ...prev, phoneNumber: formattedPhone }))
+        }
+      }
     }
     checkAuth()
   }, [])
@@ -290,7 +309,8 @@ export default function PostJobPage() {
           benefits: vakansiyaForm.benefits || undefined,
           contact_name: vakansiyaForm.contactName,
           contact_phone: vakansiyaForm.contactPhone,
-        })
+          employer_phone: userProfile?.role === 'recruiter' ? vakansiyaForm.employerPhone : undefined,
+        } as any)
 
         if (!result.success) {
           toast.error(result.error || 'Xəta baş verdi')
@@ -376,7 +396,8 @@ export default function PostJobPage() {
           duration: gundelikForm.duration || undefined,
           contact_name: gundelikForm.contactName,
           contact_phone: gundelikForm.phoneNumber,
-        })
+          employer_phone: userProfile?.role === 'recruiter' ? gundelikForm.employerPhone : undefined,
+        } as any)
 
         if (!result.success) {
           toast.error(result.error || 'Xəta baş verdi')
@@ -432,22 +453,20 @@ export default function PostJobPage() {
           <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-xl max-w-md mx-auto">
             <button
               onClick={() => setJobType('vakansiya')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all ${
-                jobType === 'vakansiya'
-                  ? 'bg-white text-black shadow-sm'
-                  : 'text-gray-600 hover:text-black'
-              }`}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all ${jobType === 'vakansiya'
+                ? 'bg-white text-black shadow-sm'
+                : 'text-gray-600 hover:text-black'
+                }`}
             >
               <BriefcaseIcon className="w-5 h-5" />
               Vakansiya
             </button>
             <button
               onClick={() => setJobType('gundelik')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all ${
-                jobType === 'gundelik'
-                  ? 'bg-white text-black shadow-sm'
-                  : 'text-gray-600 hover:text-black'
-              }`}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm transition-all ${jobType === 'gundelik'
+                ? 'bg-white text-black shadow-sm'
+                : 'text-gray-600 hover:text-black'
+                }`}
             >
               <ClockIcon className="w-5 h-5" />
               Gündəlik İş
@@ -617,9 +636,9 @@ export default function PostJobPage() {
                   />
                 </div>
 
-                {/* Ad və Telefon grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                  <div>
+                {/* Ad və Telefon - CONDITIONAL BASED ON ROLE */}
+                <div className="mb-8">
+                  <div className="mb-6">
                     <label className="block text-sm font-semibold text-black mb-2">
                       Ad <span className="text-red-500">*</span>
                     </label>
@@ -632,24 +651,103 @@ export default function PostJobPage() {
                       required
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-black mb-2">
-                      Telefon <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none font-medium">
-                        +994
+
+                  {/* USER: 1 поле (disabled) */}
+                  {userProfile?.role === 'user' && (
+                    <div>
+                      <label className="block text-sm font-semibold text-black mb-2">
+                        Əlaqə nömrəsi <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none font-medium">
+                          +994
+                        </div>
+                        <input
+                          type="tel"
+                          value={vakansiyaForm.contactPhone.replace('+994', '').trim()}
+                          disabled
+                          className="w-full pl-16 pr-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-600 text-base"
+                        />
                       </div>
-                      <input
-                        type="tel"
-                        value={vakansiyaForm.contactPhone.replace('+994', '').trim()}
-                        onChange={(e) => handleVakansiyaChange('contactPhone', '+994 ' + e.target.value)}
-                        placeholder="50 123 45 67"
-                        className="w-full pl-16 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
-                        required
-                      />
+                      <p className="text-xs text-gray-500 mt-1.5">
+                        Profil nömrənizdən istifadə olunur. Dəyişmək üçün profili redaktə edin.
+                      </p>
                     </div>
-                  </div>
+                  )}
+
+                  {/* RECRUITER: 2 поля */}
+                  {userProfile?.role === 'recruiter' && (
+                    <>
+                      <div className="mb-4">
+                        <label className="block text-sm font-semibold text-black mb-2">
+                          Mənim kontaktım (şəxsi) <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none font-medium">
+                            +994
+                          </div>
+                          <input
+                            type="tel"
+                            value={vakansiyaForm.contactPhone.replace('+994', '').trim()}
+                            disabled
+                            className="w-full pl-16 pr-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-600 text-base"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1.5">
+                          Bu sizin şəxsi nömrənizdir (profilinizdən).
+                        </p>
+                      </div>
+
+                      <div className="mb-4">
+                        <label className="block text-sm font-semibold text-black mb-2">
+                          İşəgötürənin nömrəsi <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none font-medium">
+                            +994
+                          </div>
+                          <input
+                            type="tel"
+                            value={vakansiyaForm.employerPhone.replace('+994', '').trim()}
+                            onChange={(e) => handleVakansiyaChange('employerPhone', '+994 ' + e.target.value)}
+                            placeholder="50 123 45 67"
+                            className="w-full pl-16 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
+                            required
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1.5">
+                          Vakansiya üzrə əlaqə nömrəsi (işəgötürənin).
+                        </p>
+                      </div>
+
+                      {/* WARNING + CHECKBOX */}
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4">
+                        <div className="flex gap-3">
+                          <div className="text-yellow-600 flex-shrink-0">⚠️</div>
+                          <div className="text-sm text-yellow-800">
+                            <p className="font-semibold mb-1">Diqqət!</p>
+                            <p>
+                              Yalnız real iş elanları və sizə məxsus və ya iş üçün etibar edilmiş nömrələrə icazə verilir.
+                              Başqasının xəbəri olmadan nömrəsini yazsanız, hesab <strong>müddətsiz bloklanacaq</strong>.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <label className="flex items-start gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={vakansiyaForm.termsAccepted}
+                          onChange={(e) => handleVakansiyaChange('termsAccepted', e.target.checked ? 'true' : 'false')}
+                          className="mt-1 w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
+                          required
+                        />
+                        <span className="text-sm text-gray-700">
+                          Qaydalarla razıyam, bu nömrədən istifadə etməyə səlahiyyətliyəm
+                        </span>
+                      </label>
+                    </>
+                  )}
                 </div>
               </>
             ) : (
@@ -772,33 +870,30 @@ export default function PostJobPage() {
                     <button
                       type="button"
                       onClick={() => setStartDateType('today')}
-                      className={`flex-1 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
-                        startDateType === 'today'
-                          ? 'bg-black text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`flex-1 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${startDateType === 'today'
+                        ? 'bg-black text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                       Bu gün
                     </button>
                     <button
                       type="button"
                       onClick={() => setStartDateType('tomorrow')}
-                      className={`flex-1 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
-                        startDateType === 'tomorrow'
-                          ? 'bg-black text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`flex-1 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${startDateType === 'tomorrow'
+                        ? 'bg-black text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                       Sabah
                     </button>
                     <button
                       type="button"
                       onClick={() => setStartDateType('custom')}
-                      className={`flex-1 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
-                        startDateType === 'custom'
-                          ? 'bg-black text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`flex-1 px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${startDateType === 'custom'
+                        ? 'bg-black text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                       Tarix seçin
                     </button>
@@ -851,9 +946,9 @@ export default function PostJobPage() {
                   />
                 </div>
 
-                {/* Ad və Telefon grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                  <div>
+                {/* Ad və Telefon - CONDITIONAL BASED ON ROLE */}
+                <div className="mb-8">
+                  <div className="mb-6">
                     <label className="block text-sm font-semibold text-black mb-2">
                       Ad <span className="text-red-500">*</span>
                     </label>
@@ -866,25 +961,103 @@ export default function PostJobPage() {
                       required
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-black mb-2">
-                      Telefon <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none font-medium">
-                        +994
+
+                  {/* USER: 1 поле (disabled) */}
+                  {userProfile?.role === 'user' && (
+                    <div>
+                      <label className="block text-sm font-semibold text-black mb-2">
+                        Əlaqə nömrəsi <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none font-medium">
+                          +994
+                        </div>
+                        <input
+                          type="tel"
+                          value={gundelikForm.phoneNumber.replace('+994', '').trim()}
+                          disabled
+                          className="w-full pl-16 pr-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-600 text-base"
+                        />
                       </div>
-                      <input
-                        type="tel"
-                        value={gundelikForm.phoneNumber.replace('+994', '').trim()}
-                        onChange={(e) => handleGundelikChange('phoneNumber', '+994 ' + e.target.value)}
-                        placeholder="50 123 45 67"
-                        className="w-full pl-16 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
-                        required
-                      />
+                      <p className="text-xs text-gray-500 mt-1.5">
+                        Profil nömrənizdən istifadə olunur. Dəyişmək üçün profili redaktə edin.
+                      </p>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">Telefon gizli olacaq</p>
-                  </div>
+                  )}
+
+                  {/* RECRUITER: 2 поля */}
+                  {userProfile?.role === 'recruiter' && (
+                    <>
+                      <div className="mb-4">
+                        <label className="block text-sm font-semibold text-black mb-2">
+                          Mənim kontaktım (şəxsi) <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none font-medium">
+                            +994
+                          </div>
+                          <input
+                            type="tel"
+                            value={gundelikForm.phoneNumber.replace('+994', '').trim()}
+                            disabled
+                            className="w-full pl-16 pr-4 py-3 border border-gray-200 rounded-xl bg-gray-100 text-gray-600 text-base"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1.5">
+                          Bu sizin şəxsi nömrənizdir (profilinizdən).
+                        </p>
+                      </div>
+
+                      <div className="mb-4">
+                        <label className="block text-sm font-semibold text-black mb-2">
+                          İşəgötürənin nömrəsi <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none font-medium">
+                            +994
+                          </div>
+                          <input
+                            type="tel"
+                            value={gundelikForm.employerPhone.replace('+994', '').trim()}
+                            onChange={(e) => handleGundelikChange('employerPhone', '+994 ' + e.target.value)}
+                            placeholder="50 123 45 67"
+                            className="w-full pl-16 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black text-base"
+                            required
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1.5">
+                          İş üzrə əlaqə nömrəsi (işəgötürənin).
+                        </p>
+                      </div>
+
+                      {/* WARNING + CHECKBOX */}
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4">
+                        <div className="flex gap-3">
+                          <div className="text-yellow-600 flex-shrink-0">⚠️</div>
+                          <div className="text-sm text-yellow-800">
+                            <p className="font-semibold mb-1">Diqqət!</p>
+                            <p>
+                              Yalnız real iş elanları və sizə məxsus və ya iş üçün etibar edilmiş nömrələrə icazə verilir.
+                              Başqasının xəbəri olmadan nömrəsini yazsanız, hesab <strong>müddətsiz bloklanacaq</strong>.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <label className="flex items-start gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={gundelikForm.termsAccepted}
+                          onChange={(e) => handleGundelikChange('termsAccepted', e.target.checked ? 'true' : 'false')}
+                          className="mt-1 w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
+                          required
+                        />
+                        <span className="text-sm text-gray-700">
+                          Qaydalarla razıyam, bu nömrədən istifadə etməyə səlahiyyətliy əm
+                        </span>
+                      </label>
+                    </>
+                  )}
                 </div>
               </>
             )}
