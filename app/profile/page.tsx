@@ -264,10 +264,10 @@ export default function ProfilePage() {
                     <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
                       <div
                         className={`h-2 rounded-full ${userStats.postsToday >= userStats.postsLimit
-                            ? 'bg-red-500'
-                            : userStats.postsToday / userStats.postsLimit > 0.7
-                              ? 'bg-yellow-500'
-                              : 'bg-green-500'
+                          ? 'bg-red-500'
+                          : userStats.postsToday / userStats.postsLimit > 0.7
+                            ? 'bg-yellow-500'
+                            : 'bg-green-500'
                           }`}
                         style={{
                           width: `${Math.min((userStats.postsToday / userStats.postsLimit) * 100, 100)}%`,
@@ -289,10 +289,10 @@ export default function ProfilePage() {
                       <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
                         <div
                           className={`h-2 rounded-full ${userStats.newPhonesToday >= userStats.newPhonesLimit
-                              ? 'bg-red-500'
-                              : userStats.newPhonesToday / userStats.newPhonesLimit > 0.7
-                                ? 'bg-yellow-500'
-                                : 'bg-green-500'
+                            ? 'bg-red-500'
+                            : userStats.newPhonesToday / userStats.newPhonesLimit > 0.7
+                              ? 'bg-yellow-500'
+                              : 'bg-green-500'
                             }`}
                           style={{
                             width: `${Math.min((userStats.newPhonesToday / userStats.newPhonesLimit) * 100, 100)}%`,
@@ -310,10 +310,10 @@ export default function ProfilePage() {
                       <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
                         <div
                           className={`h-2 rounded-full ${userStats.newPhonesMonth >= userStats.newPhonesMonthLimit
-                              ? 'bg-red-500'
-                              : userStats.newPhonesMonth / userStats.newPhonesMonthLimit > 0.7
-                                ? 'bg-yellow-500'
-                                : 'bg-green-500'
+                            ? 'bg-red-500'
+                            : userStats.newPhonesMonth / userStats.newPhonesMonthLimit > 0.7
+                              ? 'bg-yellow-500'
+                              : 'bg-green-500'
                             }`}
                           style={{
                             width: `${Math.min((userStats.newPhonesMonth / userStats.newPhonesMonthLimit) * 100, 100)}%`,
@@ -325,8 +325,8 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* Become Recruiter CTA (for users with 7+ posts) */}
-              {userStats.role === 'user' && userStats.postsToday >= 2 && (
+              {/* Become Recruiter CTA (for all users) */}
+              {userStats.role === 'user' && (
                 <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
                   <div className="flex items-start gap-3">
                     <div className="text-blue-600 flex-shrink-0">💡</div>
@@ -335,7 +335,7 @@ export default function ProfilePage() {
                         Rekruter olmaq istəyirsiniz?
                       </p>
                       <p className="text-xs text-blue-700 mb-3">
-                        Daha çox elan yerləşdirin və əlavə imkanlardan yararlanın
+                        Daha çox elan yerləşdirin və əlavə imkanlardan yararlanın (30 elan/gün)
                       </p>
                       <button
                         onClick={() => router.push('/become-recruiter')}
