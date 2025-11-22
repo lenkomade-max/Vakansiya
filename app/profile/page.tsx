@@ -7,7 +7,8 @@ import Navigation from '@/components/ui/Navigation'
 import { getCurrentUser, signOut } from '@/lib/auth'
 import { getProfile, updateProfile } from '@/lib/api/profile'
 import { getUserJobs, Job } from '@/lib/api/jobs'
-import { UserIcon, EnvelopeIcon, PhoneIcon, BriefcaseIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { getUserStats } from '@/lib/api/profile-stats'
+import { UserIcon, EnvelopeIcon, PhoneIcon, BriefcaseIcon, TrashIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -18,6 +19,7 @@ export default function ProfilePage() {
   const [isEditingName, setIsEditingName] = useState(false)
   const [isEditingPhone, setIsEditingPhone] = useState(false)
   const [userJobs, setUserJobs] = useState<Job[]>([])
+  const [userStats, setUserStats] = useState<any>(null)
 
   useEffect(() => {
     const loadUser = async () => {
@@ -40,6 +42,10 @@ export default function ProfilePage() {
       // Load user jobs
       const jobs = await getUserJobs(currentUser.id)
       setUserJobs(jobs)
+
+      // Load user stats
+      const stats = await getUserStats(currentUser.id)
+      setUserStats(stats)
 
       setLoading(false)
     }
@@ -217,6 +223,133 @@ export default function ProfilePage() {
             </div>
           </div>
 
+          {/* Anti-Abuse Stats Card */}
+          {userStats && (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-black">Hesab statistikası</h2>
+
+                {/* Role Badge */}
+                <div className="flex items-center gap-2">
+                  {userStats.trusted_recruiter && (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-lg text-sm font-semibold">
+                      <ShieldCheckIcon className="w-4 h-4" />
+                      Etibarlı Rekruter
+                    </div>
+                  )}
+                  {userStats.role === 'recruiter' && !userStats.trusted_recruiter && (
+                    <div className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-sm font-semibold">
+                      Rekruter
+                    </div>
+                  )}
+                  {userStats.role === 'user' && (
+                    <div className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold">
+                      İstifadəçi
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Post Limit */}
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="text-sm text-gray-600 mb-1">Gündəlik elan limiti</div>
+                  <div className="text-2xl font-bold text-black">
+                    {userStats.postsToday}
+                    <span className="text-gray-400">
+                      /{userStats.postsLimit === -1 ? '∞' : userStats.postsLimit}
+                    </span>
+                  </div>
+                  {userStats.postsLimit !== -1 && (
+                    <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full ${userStats.postsToday >= userStats.postsLimit
+                            ? 'bg-red-500'
+                            : userStats.postsToday / userStats.postsLimit > 0.7
+                              ? 'bg-yellow-500'
+                              : 'bg-green-500'
+                          }`}
+                        style={{
+                          width: `${Math.min((userStats.postsToday / userStats.postsLimit) * 100, 100)}%`,
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* New Phones Today (Recruiters only) */}
+                {userStats.role === 'recruiter' && !userStats.trusted_recruiter && (
+                  <>
+                    <div className="bg-gray-50 rounded-xl p-4">
+                      <div className="text-sm text-gray-600 mb-1">Yeni nömrələr (bu gün)</div>
+                      <div className="text-2xl font-bold text-black">
+                        {userStats.newPhonesToday}
+                        <span className="text-gray-400">/{userStats.newPhonesLimit}</span>
+                      </div>
+                      <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full ${userStats.newPhonesToday >= userStats.newPhonesLimit
+                              ? 'bg-red-500'
+                              : userStats.newPhonesToday / userStats.newPhonesLimit > 0.7
+                                ? 'bg-yellow-500'
+                                : 'bg-green-500'
+                            }`}
+                          style={{
+                            width: `${Math.min((userStats.newPhonesToday / userStats.newPhonesLimit) * 100, 100)}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-xl p-4">
+                      <div className="text-sm text-gray-600 mb-1">Yeni nömrələr (bu ay)</div>
+                      <div className="text-2xl font-bold text-black">
+                        {userStats.newPhonesMonth}
+                        <span className="text-gray-400">/{userStats.newPhonesMonthLimit}</span>
+                      </div>
+                      <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full ${userStats.newPhonesMonth >= userStats.newPhonesMonthLimit
+                              ? 'bg-red-500'
+                              : userStats.newPhonesMonth / userStats.newPhonesMonthLimit > 0.7
+                                ? 'bg-yellow-500'
+                                : 'bg-green-500'
+                            }`}
+                          style={{
+                            width: `${Math.min((userStats.newPhonesMonth / userStats.newPhonesMonthLimit) * 100, 100)}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Become Recruiter CTA (for users with 7+ posts) */}
+              {userStats.role === 'user' && userStats.postsToday >= 2 && (
+                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <div className="text-blue-600 flex-shrink-0">💡</div>
+                    <div className="flex-1">
+                      <p className="text-sm text-blue-800 font-medium mb-1">
+                        Rekruter olmaq istəyirsiniz?
+                      </p>
+                      <p className="text-xs text-blue-700 mb-3">
+                        Daha çox elan yerləşdirin və əlavə imkanlardan yararlanın
+                      </p>
+                      <button
+                        onClick={() => router.push('/become-recruiter')}
+                        className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Ərizə ver
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Contact Info Card */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-6">
             <h2 className="text-xl font-bold text-black mb-6">Əlaqə məlumatları</h2>
@@ -315,22 +448,20 @@ export default function ProfilePage() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <h3 className="text-lg font-semibold text-black">{job.title}</h3>
-                          <span className={`px-2 py-1 text-xs font-medium rounded ${
-                            job.job_type === 'vakansiya'
-                              ? 'bg-blue-100 text-blue-700'
-                              : 'bg-green-100 text-green-700'
-                          }`}>
+                          <span className={`px-2 py-1 text-xs font-medium rounded ${job.job_type === 'vakansiya'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-green-100 text-green-700'
+                            }`}>
                             {job.job_type === 'vakansiya' ? 'Vakansiya' : 'Gündəlik'}
                           </span>
-                          <span className={`px-2 py-1 text-xs font-medium rounded ${
-                            job.status === 'active'
-                              ? 'bg-green-100 text-green-700'
-                              : job.status === 'pending_review'
+                          <span className={`px-2 py-1 text-xs font-medium rounded ${job.status === 'active'
+                            ? 'bg-green-100 text-green-700'
+                            : job.status === 'pending_review'
                               ? 'bg-yellow-100 text-yellow-700'
                               : job.status === 'rejected'
-                              ? 'bg-red-100 text-red-700'
-                              : 'bg-gray-100 text-gray-600'
-                          }`}>
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-gray-100 text-gray-600'
+                            }`}>
                             {job.status === 'active' && '✓ Aktiv'}
                             {job.status === 'pending_review' && '⏳ Yoxlanışda'}
                             {job.status === 'rejected' && '✗ Rədd edildi'}
