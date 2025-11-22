@@ -35,6 +35,7 @@ export type Job = {
   duration?: string
   contact_name?: string
   contact_phone: string
+  employer_phone?: string // Recruiter's employer contact (anti-abuse)
   status: 'pending_review' | 'pending_moderation' | 'active' | 'inactive' | 'expired' | 'rejected'
   is_vip: boolean
   is_urgent: boolean
