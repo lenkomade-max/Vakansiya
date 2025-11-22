@@ -1,10 +1,9 @@
 'use server'
 
 import { createClient } from '../supabase/server'
-import Anthropic from '@anthropic-ai/sdk'
 
 /**
- * AI moderation for recruiter applications
+ * AI moderation for recruiter applications (using OpenRouter)
  */
 async function moderateRecruiterApplication(data: {
     company_name: string
@@ -12,9 +11,12 @@ async function moderateRecruiterApplication(data: {
     role_type: string
     reason: string
 }): Promise<{ approved: boolean; reason?: string }> {
-    const client = new Anthropic({
-        apiKey: process.env.ANTHROPIC_API_KEY,
-    })
+    const apiKey = process.env.OPENROUTER_API_KEY
+
+    if (!apiKey) {
+        console.warn('[Recruiter AI] No OPENROUTER_API_KEY, auto-approving')
+        return { approved: true }
+    }
 
     const prompt = `Analyze this recruiter application for legitimacy:
 
@@ -26,60 +28,103 @@ Reason: ${data.reason}
 Determine if this is a legitimate recruiter/HR/agency application or spam/fake.
 
 RED FLAGS:
-- Generic/fake company names (e.g., "Test", "ABC", "123")
+- Generic/fake company names (e.g., "Test", "ABC", "123", "test test")
 - No real contact info
 - Suspicious/spammy reason
-- Too short reason (meaningful should be 30+ chars)
+- Too short or meaningless reason
+- Clear spam patterns
 
-Return JSON:
+Return JSON ONLY:
 {
-  "approved": boolean,
-  "confidence": 0-1,
-  "reason": "Brief explanation in Azerbaijani"
+  "approved": true/false,
+  "confidence": 0.0-1.0,
+  "reason": "Brief explanation in Azerbaijani if rejected"
 }`
 
     try {
-        const response = await client.messages.create({
-            model: 'claude-3-5-sonnet-20241022',
-            max_tokens: 500,
-            temperature: 0,
-            messages: [{
-                role: 'user',
-                content: prompt
-            }]
+        console.log('[Recruiter AI] Sending to OpenRouter (deepseek-chat)...')
+
+        const headers: Record<string, string> = {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+        }
+
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+        if (siteUrl) {
+            headers['HTTP-Referer'] = siteUrl
+        }
+        headers['X-Title'] = 'Vakansiya.az'
+
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+                model: 'deepseek/deepseek-chat',
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are a content moderator. Respond only with valid JSON.',
+                    },
+                    {
+                        role: 'user',
+                        content: prompt,
+                    },
+                ],
+                temperature: 0.3,
+                max_tokens: 300,
+            }),
         })
 
-        const content = response.content[0]
-        if (content.type !== 'text') {
-            return { approved: true } // Fallback: approve if can't parse
-        }
+        console.log('[Recruiter AI] Response status:', response.status)
 
-        const jsonMatch = content.text.match(/\{[\s\S]*\}/)
-        if (!jsonMatch) {
+        if (!response.ok) {
+            const errorText = await response.text()
+            console.error('[Recruiter AI] API error:', response.status, errorText)
+            // Fallback: approve on error
             return { approved: true }
         }
 
-        const result = JSON.parse(jsonMatch[0])
+        const responseData = await response.json()
 
-        // Auto-approve if high confidence
-        if (result.approved && result.confidence >= 0.8) {
+        if (!responseData.choices || !responseData.choices[0]?.message?.content) {
+            console.error('[Recruiter AI] Invalid response structure')
             return { approved: true }
         }
 
-        // Auto-reject if low confidence spam
+        const content = responseData.choices[0].message.content
+        console.log('[Recruiter AI] AI response:', content)
+
+        // Parse JSON (может быть в markdown wrapper)
+        let jsonText = content
+        const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/)
+        if (jsonMatch) {
+            jsonText = jsonMatch[1]
+        }
+
+        const result = JSON.parse(jsonText)
+
+        // Auto-approve if high confidence approval
+        if (result.approved && result.confidence >= 0.7) {
+            console.log('[Recruiter AI] Auto-approved (confidence:', result.confidence, ')')
+            return { approved: true }
+        }
+
+        // Auto-reject if high confidence spam
         if (!result.approved && result.confidence >= 0.8) {
+            console.log('[Recruiter AI] Auto-rejected (confidence:', result.confidence, ')')
             return {
                 approved: false,
-                reason: result.reason || 'Ərizə təsdiq edilmədi'
+                reason: result.reason || 'Ərizə təsdiq edilmədi. Zəhmət olmasa real məlumat daxil edin.'
             }
         }
 
         // Medium confidence: approve (benefit of doubt)
+        console.log('[Recruiter AI] Medium confidence, approving by default')
         return { approved: true }
 
     } catch (error) {
-        console.error('[AI Moderation] Error:', error)
-        // Fallback: approve on AI error
+        console.error('[Recruiter AI] Error:', error)
+        // Fallback: approve on error
         return { approved: true }
     }
 }
