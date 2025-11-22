@@ -5,6 +5,11 @@ import { aiModerationWithFallback } from '../moderation/ai'
 import { moderateContent } from '../moderation/rules'
 import { revalidatePath } from 'next/cache'
 
+// Anti-abuse utilities
+import { checkUserBan, checkAndPromoteToRecruiter, getExtendedProfile } from './anti-abuse/profile'
+import { checkPostsLimit, checkPhoneLimits, updateRateLimits } from './anti-abuse/rate-limiting'
+import { isPhoneBlocked, trackPhoneUsage, validatePhoneFormat, normalizePhone } from './anti-abuse/phone-validation'
+
 export type JobType = 'vakansiya' | 'gundelik'
 
 export type Job = {
@@ -71,6 +76,97 @@ export async function createJob(
 
   console.log('[createJob] Starting job creation for user:', userId)
   console.log('[createJob] Job data:', jobData)
+
+  // ===== PHASE 1: ANTI-ABUSE PROTECTION =====
+
+  // 1. Check if user is banned
+  const banCheck = await checkUserBan(userId)
+  if (banCheck.isBanned) {
+    console.log('[createJob] User is banned:', userId)
+    const errorMsg = banCheck.until
+      ? `Hesabınız müvəqqəti olaraq bloklanıb.\nSəbəb: ${banCheck.reason}\nBlokun bitməsi: ${new Date(banCheck.until).toLocaleDateString('az-AZ')}`
+      : `Hesabınız bloklanıb.\nSəbəb: ${banCheck.reason}`
+
+    return {
+      success: false,
+      error: errorMsg
+    }
+  }
+
+  // 2. Check daily post limit
+  const postsLimitCheck = await checkPostsLimit(userId)
+  if (!postsLimitCheck.allowed) {
+    console.log('[createJob] User exceeded posts limit:', userId, postsLimitCheck)
+    return {
+      success: false,
+      error: postsLimitCheck.error || 'Gündəlik limit bitdi'
+    }
+  }
+
+  // 3. Get user profile to determine role
+  const profile = await getExtendedProfile(userId)
+  if (!profile) {
+    return {
+      success: false,
+      error: 'Profil tapılmadı'
+    }
+  }
+
+  // 4. Validate and normalize phone numbers
+  let contactPhone = normalizePhone(jobData.contact_phone)
+  const phoneFormatCheck = validatePhoneFormat(contactPhone)
+  if (!phoneFormatCheck.isValid) {
+    return {
+      success: false,
+      error: phoneFormatCheck.error
+    }
+  }
+
+  // 5. Check if contact_phone is blocked
+  const contactPhoneBlockCheck = await isPhoneBlocked(contactPhone)
+  if (contactPhoneBlockCheck.isBlocked) {
+    console.log('[createJob] Contact phone is blocked:', contactPhone)
+    return {
+      success: false,
+      error: `Bu nömrə bloklanıb: ${contactPhoneBlockCheck.reason}`
+    }
+  }
+
+  // 6. For recruiters: validate employer_phone and check limits
+  let employerPhone: string | undefined = undefined
+  if (profile.role === 'recruiter' && (jobData as any).employer_phone) {
+    employerPhone = normalizePhone((jobData as any).employer_phone)
+
+    // Validate format
+    const employerPhoneFormatCheck = validatePhoneFormat(employerPhone)
+    if (!employerPhoneFormatCheck.isValid) {
+      return {
+        success: false,
+        error: `İşəgötürənin nömrəsi: ${employerPhoneFormatCheck.error}`
+      }
+    }
+
+    // Check if blocked
+    const employerPhoneBlockCheck = await isPhoneBlocked(employerPhone)
+    if (employerPhoneBlockCheck.isBlocked) {
+      return {
+        success: false,
+        error: `İşəgötürənin nömrəsi bloklanıb: ${employerPhoneBlockCheck.reason}`
+      }
+    }
+
+    // Check phone limits (10 new/day, 50 new/month)
+    const phoneLimitCheck = await checkPhoneLimits(userId, employerPhone)
+    if (!phoneLimitCheck.allowed) {
+      console.log('[createJob] Recruiter exceeded phone limits:', userId)
+      return {
+        success: false,
+        error: phoneLimitCheck.error || 'Telefon nömrəsi limiti bitdi'
+      }
+    }
+  }
+
+  // ===== PHASE 2: CONTENT MODERATION (existing logic) =====
 
   // Prepare job post for moderation
   const jobPost = {
@@ -200,6 +296,23 @@ export async function createJob(
   }
 
   console.log('[createJob] Job created successfully:', data.id)
+
+  // ===== PHASE 3: POST-CREATION TRACKING =====
+
+  // Update rate limits (posts_today counter)
+  await updateRateLimits(userId, employerPhone)
+
+  // Track phone number usage
+  await trackPhoneUsage(userId, contactPhone, data.id)
+  if (employerPhone) {
+    await trackPhoneUsage(userId, employerPhone, data.id)
+  }
+
+  // Check if user should be auto-promoted to recruiter (10+ posts in 7 days)
+  const promoted = await checkAndPromoteToRecruiter(userId)
+  if (promoted) {
+    console.log('[createJob] User auto-promoted to recruiter:', userId)
+  }
 
   // Revalidate profile page to show new job
   revalidatePath('/profile')
