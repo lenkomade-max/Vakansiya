@@ -157,21 +157,28 @@ export async function submitRecruiterApplication(
         }
 
         // Update profile with recruiter role
+        const updateData = {
+            role: 'recruiter' as const,
+            company_name: data.company_name,
+            recruiter_contact: data.recruiter_contact,
+            updated_at: new Date().toISOString(),
+        }
+
+        console.log('[submitRecruiterApplication] Updating profile with data:', updateData)
+
         const { error: updateError } = await supabase
             .from('profiles')
-            .update({
-                role: 'recruiter',
-                company_name: data.company_name,
-                recruiter_contact: data.recruiter_contact,
-                updated_at: new Date().toISOString(),
-            })
+            .update(updateData)
             .eq('id', userId)
 
         if (updateError) {
             console.error('[submitRecruiterApplication] Database error:', updateError)
+            console.error('[submitRecruiterApplication] Error code:', updateError.code)
+            console.error('[submitRecruiterApplication] Error message:', updateError.message)
+            console.error('[submitRecruiterApplication] Error details:', updateError.details)
             return {
                 success: false,
-                error: 'Xəta baş verdi. Zəhmət olmasa yenidən cəhd edin.'
+                error: `Xəta: ${updateError.message}`
             }
         }
 
